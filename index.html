@@ -3,37 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>BINGO Party - Classic 1-25 Pen & Paper Game</title>
+  <title>BINGO Party - Classic 1-25 Pen & Paper Multiplayer</title>
 
-  <!-- Meta & OpenGraph -->
-  <meta name="description" content="Play the classic 1-25 pen-and-paper BINGO game online with friends! Cross out lines to get B-I-N-G-O. Free, realtime, and zero install.">
+  <!-- Meta & Social -->
+  <meta name="description" content="Play the classic 1-25 pen-and-paper BINGO game online with friends! Track your stats, sign in, climb the leaderboard, and resume games anytime.">
   <meta name="theme-color" content="#0b0f17">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/bingo-paper.css">
+  <link rel="stylesheet" href="css/leaderboard.css">
 
-  <!-- MQTT over WebSockets CDN for Guaranteed Realtime Multiplayer -->
+  <!-- MQTT over WebSockets CDN for Realtime Multiplayer -->
   <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
 </head>
 <body>
 
-  <!-- App Header -->
+  <!-- App Header & Navigation -->
   <header class="app-header">
     <div class="logo-area" id="btn-header-logo">
       <div class="logo-icon">B</div>
       <div class="logo-text">BINGO Party</div>
     </div>
 
-    <!-- Active Status Pill -->
-    <div class="status-pill" id="header-status-pill">
-      <span class="status-dot connected" id="network-status-dot"></span>
-      <span id="header-status-text">Classic 1-25</span>
-    </div>
+    <!-- Navigation Tabs -->
+    <nav class="header-nav">
+      <button class="nav-link-btn active" data-nav="home">🏠 Home</button>
+      <button class="nav-link-btn" data-nav="lobby">🎮 Play</button>
+      <button class="nav-link-btn" data-nav="leaderboard">🏆 Leaderboard</button>
+      <button class="nav-link-btn" data-nav="history">📜 History</button>
+    </nav>
 
     <div class="header-actions">
-      <!-- Invite / QR Code (Multiplayer only) -->
+      <!-- User Profile / Sign In Pill -->
+      <button class="user-account-btn" id="btn-header-profile" title="Account & Profile">
+        <span class="user-avatar-small" id="header-user-avatar">👤</span>
+        <span id="header-user-name">Sign In</span>
+        <span id="header-user-streak" style="color:#f59e0b; display:none;">🔥 0</span>
+      </button>
+
+      <!-- Invite Link / QR (shown in multiplayer) -->
       <button class="icon-btn" id="btn-header-invite" title="Invite Friends / QR Code" style="display:none;">
         🔗
       </button>
@@ -43,11 +53,6 @@
         🔊
       </button>
 
-      <!-- Voice Caller Toggle -->
-      <button class="icon-btn" id="btn-header-voice" title="Toggle Voice Announcement">
-        🗣️
-      </button>
-
       <!-- Rules / Help -->
       <button class="icon-btn" id="btn-header-rules" title="How to Play">
         ❓
@@ -55,85 +60,167 @@
     </div>
   </header>
 
-  <!-- Main View Area -->
+  <!-- Main Views Container -->
   <main>
 
     <!-- ======================================================================
-         VIEW 1: LOBBY (Mode Selection)
+         VIEW 1: HOME PAGE (Hero, Resumption, Stats, Guides)
          ====================================================================== -->
-    <section id="view-lobby" class="view active">
-      <div class="lobby-hero">
-        <h1 class="lobby-title">
-          <span class="b">B</span><span class="i">I</span><span class="n">N</span><span class="g">G</span><span class="o">O</span>
-        </h1>
-        <p class="lobby-subtitle">
-          The nostalgic pen-and-paper game we all played in school! Cross out numbers, complete 5 lines to strike B - I - N - G - O, and win!
-        </p>
+    <section id="view-home" class="view active">
+      <div class="home-container">
 
-        <!-- Player Nickname -->
-        <div style="max-width:360px; margin:0 auto 28px;">
-          <label class="form-label" for="player-nickname">Your Nickname</label>
-          <input type="text" id="player-nickname" class="input-text" placeholder="e.g. Lucky Ace" maxlength="15">
+        <!-- Ongoing Game Resumption Card (Shown if unfinished game is saved) -->
+        <div class="resume-game-banner" id="resume-game-card" style="display:none;">
+          <div class="resume-info">
+            <span class="resume-icon">⚡</span>
+            <div>
+              <div style="font-weight:900; font-size:1.1rem; color:#f8fafc;">
+                Unfinished Game Found!
+              </div>
+              <div style="font-size:0.88rem; color:#bae6fd;" id="resume-game-desc">
+                You have a saved game vs Computer from earlier. Pick up right where you left off!
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary" id="btn-resume-game">
+              ▶️ Resume Game
+            </button>
+            <button class="btn btn-secondary" id="btn-discard-game" style="font-size:0.85rem; padding:8px 14px;">
+              Discard
+            </button>
+          </div>
         </div>
 
-        <!-- Mode Cards -->
-        <div class="lobby-grid">
+        <!-- Home Hero Banner -->
+        <div class="home-hero">
+          <div class="home-hero-badge">⭐ Classic 1-25 School Pen & Paper Edition</div>
+          <h1 class="home-hero-title">
+            Cross Out Numbers.<br>Strike <span style="color:#3b82f6;">B</span><span style="color:#ef4444;">I</span><span style="color:#f59e0b;">N</span><span style="color:#10b981;">G</span><span style="color:#8b5cf6;">O</span>. Win!
+          </h1>
+          <p class="home-hero-desc">
+            Play the iconic multiplayer game with friends online or solo against a smart AI. Your gameplay, dates, and stats are saved so you can climb the leaderboard!
+          </p>
+          <div class="home-actions-row">
+            <button class="btn btn-primary btn-lg" id="btn-home-play-bot">
+              🤖 Play vs Computer (Instant)
+            </button>
+            <button class="btn btn-success btn-lg" id="btn-home-play-multiplayer">
+              👥 Play with Friends
+            </button>
+            <button class="btn btn-secondary btn-lg" id="btn-home-leaderboard">
+              🏆 View Leaderboard
+            </button>
+          </div>
+        </div>
 
-          <!-- Option 1: Play vs Computer (Instant Solo Mode) -->
+        <!-- Player Quick Profile Stats Widget -->
+        <div class="profile-stats-card">
+          <div class="profile-stat-box">
+            <div class="profile-stat-val" id="home-stat-wins">0</div>
+            <div class="profile-stat-lbl">Victories</div>
+          </div>
+          <div class="profile-stat-box">
+            <div class="profile-stat-val" id="home-stat-losses">0</div>
+            <div class="profile-stat-lbl">Defeats</div>
+          </div>
+          <div class="profile-stat-box">
+            <div class="profile-stat-val" id="home-stat-winrate">0%</div>
+            <div class="profile-stat-lbl">Win Rate</div>
+          </div>
+          <div class="profile-stat-box">
+            <div class="profile-stat-val streak" id="home-stat-streak">🔥 0</div>
+            <div class="profile-stat-lbl">Win Streak</div>
+          </div>
+          <div class="profile-stat-box">
+            <div class="profile-stat-val" id="home-stat-rank" style="font-size:1.2rem; color:#38bdf8;">Novice</div>
+            <div class="profile-stat-lbl">Rank Title</div>
+          </div>
+        </div>
+
+        <!-- How It Works Quick Card -->
+        <div class="card-glass" style="padding:22px; margin-top:8px;">
+          <h3 style="margin-bottom:10px; font-size:1.15rem; display:flex; align-items:center; gap:8px;">
+            📖 The Rules at a Glance
+          </h3>
+          <div style="font-size:0.9rem; color:#cbd5e1; line-height:1.6; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+            <div>
+              <strong>1. Fill 1 to 25:</strong> Arrange numbers 1 through 25 in any order on your 5x5 board, or click Auto-Fill.
+            </div>
+            <div>
+              <strong>2. Take Turns:</strong> On your turn, call any uncrossed number. It gets struck out on <em>both</em> players' grids!
+            </div>
+            <div>
+              <strong>3. Cross B-I-N-G-O:</strong> Each completed row, column, or diagonal line crosses out the next letter in B-I-N-G-O.
+            </div>
+            <div>
+              <strong>4. Win:</strong> First player to cross all 5 letters reaches BINGO and wins the match!
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 2: LOBBY (Multiplayer & Solo Selection)
+         ====================================================================== -->
+    <section id="view-lobby" class="view">
+      <div class="lobby-hero">
+        <h2 style="font-size:2rem; font-weight:900; margin-bottom:8px;">Choose Game Mode</h2>
+        <p class="lobby-subtitle">Play solo or challenge your friends in a private room.</p>
+
+        <div class="lobby-grid">
+          <!-- Solo Mode -->
           <div class="lobby-card">
-            <h2 class="lobby-card-title">🤖 Play vs Computer</h2>
-            <p class="lobby-card-desc">Practice and play solo immediately against a smart AI opponent. No waiting needed!</p>
+            <h3 class="lobby-card-title">🤖 Play vs Computer</h3>
+            <p class="lobby-card-desc">Jump straight into a match against smart AI. Great for practice and climbing ranks.</p>
             <div style="flex:1;"></div>
-            <button class="btn btn-primary btn-block btn-lg" id="btn-start-vs-bot">
-              ⚡ Play Solo Now
+            <button class="btn btn-primary btn-block btn-lg" id="btn-lobby-bot">
+              ⚡ Start Solo Match
             </button>
           </div>
 
-          <!-- Option 2: Host Online Room -->
+          <!-- Create Room -->
           <div class="lobby-card">
-            <h2 class="lobby-card-title">👑 Create Room</h2>
-            <p class="lobby-card-desc">Generate a room code and invite a friend with an instant link or QR code.</p>
+            <h3 class="lobby-card-title">👑 Create Online Room</h3>
+            <p class="lobby-card-desc">Host a match and send the 4-letter code or QR link to a friend to play live.</p>
             <div style="flex:1;"></div>
-            <button class="btn btn-success btn-block btn-lg" id="btn-create-room">
+            <button class="btn btn-success btn-block btn-lg" id="btn-lobby-create">
               🚀 Create Room
             </button>
           </div>
 
-          <!-- Option 3: Join Room -->
+          <!-- Join Room -->
           <div class="lobby-card">
-            <h2 class="lobby-card-title">🎮 Join Game</h2>
-            <p class="lobby-card-desc">Enter your friend's 4-character room code to jump into their game.</p>
+            <h3 class="lobby-card-title">🎮 Join Game</h3>
+            <p class="lobby-card-desc">Enter the room code shared by your friend to join their private lobby.</p>
             <div class="form-group" style="margin-bottom:12px;">
               <input type="text" id="join-room-input" class="input-text input-code" placeholder="CODE" maxlength="6">
             </div>
-            <button class="btn btn-warning btn-block" id="btn-join-room">
+            <button class="btn btn-warning btn-block" id="btn-lobby-join">
               🎲 Join Room
             </button>
           </div>
-
         </div>
       </div>
     </section>
 
     <!-- ======================================================================
-         VIEW 2: SETUP BOARD (Fill 1 to 25 Numbers)
+         VIEW 3: SETUP BOARD (Fill 1 to 25 Numbers)
          ====================================================================== -->
     <section id="view-setup" class="view">
       <div style="text-align:center; margin-bottom:16px;">
-        <h2 style="font-size:1.6rem; font-weight:800; margin-bottom:4px;">Fill Your 5x5 Board</h2>
+        <h2 style="font-size:1.6rem; font-weight:800; margin-bottom:4px;">Set Up Your 5x5 Board</h2>
         <p style="color:var(--text-muted); font-size:0.9rem;">
           Place numbers 1 to 25 in any order you like, or tap <strong>Auto-Fill</strong>!
         </p>
       </div>
 
-      <!-- 5x5 Setup Grid -->
       <div class="paper-board-wrapper">
-        <div class="paper-grid" id="setup-grid-element">
-          <!-- 25 slots rendered via JS -->
-        </div>
+        <div class="paper-grid" id="setup-grid-element"></div>
       </div>
 
-      <!-- Setup Control Actions -->
       <div style="max-width:480px; margin:16px auto 0;">
         <div class="setup-actions-row">
           <button class="btn btn-secondary" id="btn-setup-shuffle">
@@ -147,32 +234,27 @@
           </button>
         </div>
 
-        <!-- Waiting Status Pill in Multiplayer -->
         <div id="setup-waiting-indicator" style="display:none; text-align:center; margin-top:14px; font-weight:600; color:#38bdf8;">
           ⏳ You are ready! Waiting for your opponent to finish their board...
         </div>
 
-        <!-- Number Palette (1 to 25) for manual placement -->
         <div class="setup-palette-card" id="setup-palette-container">
           <div style="font-size:0.85rem; font-weight:700; color:var(--text-muted);">
             Tap a number to place it in the next slot:
           </div>
-          <div class="setup-palette-grid" id="setup-palette-grid">
-            <!-- 1 to 25 buttons rendered via JS -->
-          </div>
+          <div class="setup-palette-grid" id="setup-palette-grid"></div>
         </div>
       </div>
     </section>
 
     <!-- ======================================================================
-         VIEW 3: ACTIVE GAMEPLAY SCREEN
+         VIEW 4: ACTIVE GAMEPLAY SCREEN
          ====================================================================== -->
     <section id="view-game" class="view">
 
-      <!-- Game Top Info Bar -->
       <div class="game-top-bar">
         <div style="display:flex; align-items:center; gap:8px;">
-          <span style="font-weight:700; font-size:0.9rem;" id="game-room-tag">Room: ABCD</span>
+          <span style="font-weight:700; font-size:0.9rem;" id="game-room-tag">Solo vs Bot</span>
           <button class="btn btn-secondary" id="btn-game-copy-link" style="padding:4px 10px; font-size:0.75rem;">
             📋 Copy Link
           </button>
@@ -190,7 +272,7 @@
         </div>
       </div>
 
-      <!-- The Iconic B - I - N - G - O Score Header -->
+      <!-- B - I - N - G - O Score Header -->
       <div class="bingo-score-header">
         <div class="bingo-letter-box letter-box-b" id="bingo-letter-0">B</div>
         <div class="bingo-letter-box letter-box-i" id="bingo-letter-1">I</div>
@@ -205,21 +287,19 @@
         <span id="turn-banner-text">YOUR TURN! Pick any uncrossed number on your board.</span>
       </div>
 
-      <!-- Last Called Number Callout -->
+      <!-- Latest Call -->
       <div class="latest-call-bar" id="latest-call-container">
         <span>Latest Call:</span>
         <div class="latest-call-badge" id="latest-call-number">-</div>
-        <span id="latest-call-caller" style="font-size:0.85rem; color:var(--text-muted);">(Game starting...)</span>
+        <span id="latest-call-caller" style="font-size:0.85rem; color:var(--text-muted);">(Game started)</span>
       </div>
 
-      <!-- 5x5 Main Game Board -->
+      <!-- 5x5 Grid -->
       <div class="paper-board-wrapper">
-        <div class="paper-grid" id="game-grid-element">
-          <!-- 25 active game cells rendered via JS -->
-        </div>
+        <div class="paper-grid" id="game-grid-element"></div>
       </div>
 
-      <!-- Quick Reaction Emojis -->
+      <!-- Reactions Bar -->
       <div class="reaction-bar">
         <button class="reaction-btn" data-emoji="🎉" title="Party">🎉</button>
         <button class="reaction-btn" data-emoji="🔥" title="Fire">🔥</button>
@@ -231,11 +311,131 @@
 
     </section>
 
+    <!-- ======================================================================
+         VIEW 5: LEADERBOARD PAGE
+         ====================================================================== -->
+    <section id="view-leaderboard" class="view">
+      <div class="leaderboard-container">
+        <div class="leaderboard-header">
+          <div>
+            <h2 style="font-size:1.8rem; font-weight:900;">🏆 Player Leaderboard</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Rankings based on total victories and win rate.</p>
+          </div>
+          <button class="btn btn-primary" id="btn-leaderboard-play">
+            🎮 Play & Rank Up
+          </button>
+        </div>
+
+        <div class="leaderboard-table-card">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Rank Title</th>
+                <th>Wins</th>
+                <th>Losses</th>
+                <th>Win Rate</th>
+                <th>Streak</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 6: MATCH HISTORY WITH DATES
+         ====================================================================== -->
+    <section id="view-history" class="view">
+      <div class="leaderboard-container">
+        <div class="leaderboard-header">
+          <div>
+            <h2 style="font-size:1.8rem; font-weight:900;">📜 Match History & Dates</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Every game you played with exact timestamps and outcomes.</p>
+          </div>
+        </div>
+
+        <div class="history-feed" id="history-feed-container">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- ======================================================================
-       MODALS & FLOATING DRAWERS
+       MODALS
        ====================================================================== -->
+
+  <!-- User Account Sign In / Sign Up Modal -->
+  <div class="modal-overlay" id="modal-auth">
+    <div class="modal-content">
+      <button class="modal-close" data-close-modal>&times;</button>
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tab-auth-signin">Sign In</button>
+        <button class="auth-tab-btn" id="tab-auth-signup">Create Profile</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form id="form-signin">
+        <div class="form-group">
+          <label class="form-label" for="signin-username">Username</label>
+          <input type="text" id="signin-username" class="input-text" placeholder="Enter your username" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signin-pin">4-Digit PIN / Password</label>
+          <input type="password" id="signin-pin" class="input-text" placeholder="1234" maxlength="8">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:12px;">
+          🔑 Sign In
+        </button>
+      </form>
+
+      <!-- Sign Up Form (hidden by default) -->
+      <form id="form-signup" style="display:none;">
+        <div class="form-group">
+          <label class="form-label" for="signup-username">Choose Username</label>
+          <input type="text" id="signup-username" class="input-text" placeholder="e.g. LuckyAce" maxlength="15" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signup-pin">4-Digit PIN</label>
+          <input type="password" id="signup-pin" class="input-text" placeholder="1234" maxlength="8">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pick Avatar</label>
+          <div class="avatar-selector" id="signup-avatar-selector">
+            <button type="button" class="avatar-opt-btn active" data-avatar="🦊">🦊</button>
+            <button type="button" class="avatar-opt-btn" data-avatar="🦁">🦁</button>
+            <button type="button" class="avatar-opt-btn" data-avatar="👑">👑</button>
+            <button type="button" class="avatar-opt-btn" data-avatar="⚡">⚡</button>
+            <button type="button" class="avatar-opt-btn" data-avatar="🎯">🎯</button>
+            <button type="button" class="avatar-opt-btn" data-avatar="💎">💎</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success btn-block btn-lg" style="margin-top:12px;">
+          ✨ Create Account & Save Stats
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Board Inspector Modal (View past game boards from History) -->
+  <div class="modal-overlay" id="modal-board-inspect">
+    <div class="modal-content" style="text-align:center;">
+      <button class="modal-close" data-close-modal>&times;</button>
+      <h3 style="margin-bottom:6px;">Historic Game Board</h3>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:14px;" id="inspect-match-date">
+        Match played on ...
+      </p>
+      <div class="paper-board-wrapper" style="max-width:380px;">
+        <div class="paper-grid" id="inspect-grid-element"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- Invite / QR Code Modal -->
   <div class="modal-overlay" id="modal-invite">
@@ -245,16 +445,13 @@
       <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:14px;">
         Share this code or scan with any mobile camera:
       </p>
-
       <div id="modal-qr-container" style="display:flex; justify-content:center; margin:14px 0;"></div>
-
       <div class="form-group">
         <label class="form-label">Room Code</label>
         <div style="font-size:2rem; font-weight:900; letter-spacing:4px; color:var(--accent-gold);" id="modal-room-code-display">
           ----
         </div>
       </div>
-
       <div class="form-group">
         <div style="display:flex; gap:8px;">
           <input type="text" id="modal-invite-link-input" class="input-text" readonly style="font-size:0.85rem;">
@@ -298,7 +495,7 @@
           <br>• 4th Line = <strong>G</strong> is crossed out!
           <br>• 5th Line = <strong>O</strong> is crossed out!
         </p>
-        <p><strong>5. BINGO Win:</strong> The first player to complete 5 lines gets all <strong>B - I - N - G - O</strong> letters and wins the game!</p>
+        <p><strong>5. BINGO Win:</strong> The first player to complete 5 lines gets all <strong>B - I - N - G - O</strong> letters and wins the game! Stats and dates are recorded in your profile.</p>
       </div>
     </div>
   </div>
@@ -306,7 +503,7 @@
   <!-- Floating Reaction Container -->
   <div class="reaction-container" id="reaction-container"></div>
 
-  <!-- Realtime In-Game Chat Drawer -->
+  <!-- Live In-Game Chat Drawer -->
   <div class="chat-drawer" id="chat-drawer">
     <div class="chat-header" id="chat-header-toggle">
       <span>💬 Live Chat</span>
@@ -331,6 +528,7 @@
   <script src="js/qrcode-lib.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/bingo-logic.js"></script>
+  <script src="js/auth-storage.js"></script>
   <script src="js/multiplayer.js"></script>
   <script src="js/app.js"></script>
 

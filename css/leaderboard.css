@@ -1,0 +1,375 @@
+/* ==========================================================================
+   Home Page, User Profiles, Match History, and Leaderboard Styles
+   ========================================================================== */
+
+/* Top Navigation Tabs in Header */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-link-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-link-btn.active {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+/* User Account Profile Pill in Header */
+.user-account-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.user-account-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #38bdf8;
+}
+
+.user-avatar-small {
+  font-size: 1.1rem;
+}
+
+/* ==========================================================================
+   HOME PAGE SECTION
+   ========================================================================== */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 10px 0 30px;
+}
+
+/* Resume Unfinished Game Alert Banner */
+.resume-game-banner {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(37, 99, 235, 0.25));
+  border: 2px solid #38bdf8;
+  border-radius: var(--radius-lg);
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
+  animation: pulse 2s infinite;
+}
+
+.resume-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.resume-icon {
+  font-size: 2rem;
+}
+
+/* Home Hero Area */
+.home-hero {
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.home-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.home-hero-title {
+  font-size: clamp(2.4rem, 6vw, 3.8rem);
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  margin-bottom: 12px;
+  font-family: var(--font-display, sans-serif);
+}
+
+.home-hero-desc {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  max-width: 580px;
+  margin: 0 auto 28px;
+}
+
+.home-actions-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+/* Profile Quick Stats Widget Card */
+.profile-stats-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.profile-stat-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 14px 8px;
+}
+
+.profile-stat-val {
+  font-size: 1.8rem;
+  font-weight: 900;
+  font-family: var(--font-display);
+  color: var(--text-main);
+}
+
+.profile-stat-val.streak {
+  color: #f59e0b;
+}
+
+.profile-stat-lbl {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   LEADERBOARD PAGE
+   ========================================================================== */
+.leaderboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.leaderboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.leaderboard-table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.leaderboard-table th {
+  padding: 14px 18px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.leaderboard-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.leaderboard-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.leaderboard-table tr.current-user td {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-weight: 900;
+  font-size: 0.95rem;
+}
+
+.rank-1 { background: linear-gradient(135deg, #fbbf24, #d97706); color: #000; box-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+.rank-2 { background: linear-gradient(135deg, #e2e8f0, #94a3b8); color: #000; }
+.rank-3 { background: linear-gradient(135deg, #f97316, #b45309); color: #fff; }
+.rank-other { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); }
+
+.player-cell-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.player-cell-avatar {
+  font-size: 1.4rem;
+}
+
+/* ==========================================================================
+   MATCH HISTORY WITH DATES
+   ========================================================================== */
+.history-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.history-card:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.history-main-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.history-result-badge {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
+.result-won {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.result-lost {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.history-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   SIGN IN / PROFILE MODAL
+   ========================================================================== */
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-glass);
+  margin-bottom: 20px;
+}
+
+.auth-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.auth-tab-btn.active {
+  color: #38bdf8;
+  border-bottom-color: #38bdf8;
+}
+
+.avatar-selector {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 10px 0 16px;
+}
+
+.avatar-opt-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.avatar-opt-btn:hover {
+  transform: scale(1.15);
+}
+
+.avatar-opt-btn.active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.2);
+  transform: scale(1.15);
+}
