@@ -5,17 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>BINGO Party - Classic 1-25 Pen & Paper Multiplayer</title>
 
+  <!-- Prevent Browser Stale Cache -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <!-- Meta & Social -->
   <meta name="description" content="Play the classic 1-25 pen-and-paper BINGO game online with friends! Track your stats, sign in, climb the leaderboard, and resume games anytime.">
   <meta name="theme-color" content="#0b0f17">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=2.2.1">
 
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/bingo-paper.css">
-  <link rel="stylesheet" href="css/leaderboard.css">
+  <!-- Automated Storage Cache Invalidator Script (Runs Before Render) -->
+  <script>
+    (function() {
+      var LATEST_VERSION = '2.2.1';
+      var currentVer = localStorage.getItem('bingo_cache_version');
+      if (currentVer !== LATEST_VERSION) {
+        var legacyKeys = [
+          'bingo_users_db_v1',
+          'bingo_current_user_v1',
+          'bingo_active_saved_game_v1',
+          'bingo_shared_leaderboard_v1',
+          'bingo_player_name',
+          'bingo_dauber_color'
+        ];
+        legacyKeys.forEach(function(k) { localStorage.removeItem(k); });
+        localStorage.setItem('bingo_cache_version', LATEST_VERSION);
+      }
+    })();
+  </script>
 
-  <!-- MQTT over WebSockets CDN for Realtime Multiplayer -->
+  <!-- Versioned Stylesheets for Instant Cache Invalidation -->
+  <link rel="stylesheet" href="css/style.css?v=2.2.1">
+  <link rel="stylesheet" href="css/bingo-paper.css?v=2.2.1">
+  <link rel="stylesheet" href="css/leaderboard.css?v=2.2.1">
+
+  <!-- MQTT over WebSockets CDN -->
   <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
 </head>
 <body>
@@ -382,7 +407,7 @@
       <div style="font-size:2.8rem; margin-bottom:6px;">🎲</div>
       <h2 style="font-size:1.6rem; font-weight:900; margin-bottom:4px;">Welcome to BINGO Party!</h2>
       <p style="color:var(--text-muted); font-size:0.88rem;">
-        How would you like to play today?
+        Choose how you would like to play today:
       </p>
 
       <div class="entry-options-list">
@@ -474,6 +499,11 @@
       <!-- Sign Out Button -->
       <button class="btn btn-danger btn-block btn-lg" id="btn-modal-signout">
         🚪 Sign Out
+      </button>
+
+      <!-- Clear Cache 1-Click Reset Button -->
+      <button class="btn btn-secondary btn-block" id="btn-clear-cache" style="margin-top:12px; font-size:0.8rem; color:var(--text-muted);">
+        🧹 Clear App Cache & Hard Reload
       </button>
     </div>
   </div>
@@ -630,14 +660,14 @@
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
-  <!-- Application Scripts -->
-  <script src="js/confetti.js"></script>
-  <script src="js/qrcode-lib.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/bingo-logic.js"></script>
-  <script src="js/auth-storage.js"></script>
-  <script src="js/multiplayer.js"></script>
-  <script src="js/app.js"></script>
+  <!-- Versioned Scripts for Clean Cache Busting -->
+  <script src="js/confetti.js?v=2.2.1"></script>
+  <script src="js/qrcode-lib.js?v=2.2.1"></script>
+  <script src="js/audio.js?v=2.2.1"></script>
+  <script src="js/bingo-logic.js?v=2.2.1"></script>
+  <script src="js/auth-storage.js?v=2.2.1"></script>
+  <script src="js/multiplayer.js?v=2.2.1"></script>
+  <script src="js/app.js?v=2.2.1"></script>
 
 </body>
 </html>

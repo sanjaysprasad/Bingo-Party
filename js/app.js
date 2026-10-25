@@ -314,6 +314,16 @@ class BingoApp {
       this.openAuthModal('signup');
     });
 
+    // 7. Clear Cache & Hard Reset Button
+    const btnClearCache = document.getElementById('btn-clear-cache');
+    if (btnClearCache) {
+      btnClearCache.addEventListener('click', () => {
+        if (confirm('Clear all local app cache and reload? This will wipe stored cache and reload freshly.')) {
+          window.BingoAuthStorage.clearAllCache();
+        }
+      });
+    }
+
     // Toggle Sign In vs Sign Up tabs in Auth Modal
     this.dom.tabAuthSignin.addEventListener('click', () => {
       this.openAuthModal('signin');

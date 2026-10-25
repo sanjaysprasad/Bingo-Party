@@ -1,6 +1,6 @@
 /**
  * User Authentication, Game State Persistence, and Leaderboard Storage
- * No random default accounts. Supports Guest Mode, Login, and Sign Up.
+ * No random default accounts. Supports Guest Mode, Login, Sign Up, and Cache Clearing.
  */
 class BingoAuthStorage {
   constructor() {
@@ -8,17 +8,41 @@ class BingoAuthStorage {
     this.STORAGE_KEY_CURRENT = 'bingo_current_user_v2';
     this.STORAGE_KEY_GUEST = 'bingo_guest_user_v2';
     this.STORAGE_KEY_ACTIVE_GAME = 'bingo_active_saved_game_v2';
+    this.STORAGE_KEY_VER = 'bingo_app_version';
 
     this.currentUser = null;
-    this.cleanupOldDemoData();
+    this.purgeLegacyCaches();
     this.loadCurrentUser();
   }
 
-  // Clean up any legacy seeded accounts from v1
-  cleanupOldDemoData() {
-    localStorage.removeItem('bingo_users_db_v1');
-    localStorage.removeItem('bingo_current_user_v1');
-    localStorage.removeItem('bingo_active_saved_game_v1');
+  // Automatically purges all legacy v1 cached demo accounts
+  purgeLegacyCaches() {
+    try {
+      const keys = [
+        'bingo_users_db_v1',
+        'bingo_current_user_v1',
+        'bingo_active_saved_game_v1',
+        'bingo_shared_leaderboard_v1',
+        'bingo_player_name',
+        'bingo_dauber_color'
+      ];
+      keys.forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+  }
+
+  // 1-Click Hard Reset of all local game cache and reload
+  clearAllCache() {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      // Clear cookies if any
+      document.cookie.split(";").forEach(c => {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      window.location.href = window.location.pathname + '?nocache=' + Date.now();
+    } catch (e) {
+      window.location.reload();
+    }
   }
 
   getAllUsers() {
@@ -112,7 +136,6 @@ class BingoAuthStorage {
       return { success: false, error: 'Username already taken. Please sign in or choose another.' };
     }
 
-    // Carry over any stats if upgrading from guest
     let existingStats = { wins: 0, losses: 0, streak: 0, totalLines: 0 };
     let existingHistory = [];
     if (this.currentUser && this.currentUser.isGuest) {
@@ -139,7 +162,7 @@ class BingoAuthStorage {
     return { success: true, user: newUser };
   }
 
-  // Sign Out (clears session and returns to login gate)
+  // Sign Out
   signOut() {
     this.currentUser = null;
     localStorage.removeItem(this.STORAGE_KEY_CURRENT);
@@ -178,7 +201,6 @@ class BingoAuthStorage {
       calledNumbers: calledNumbers ? Array.from(calledNumbers) : []
     };
 
-    // Update stats
     const stats = this.currentUser.stats || { wins: 0, losses: 0, streak: 0, totalLines: 0 };
     if (result === 'WON') {
       stats.wins += 1;
@@ -191,13 +213,12 @@ class BingoAuthStorage {
 
     this.currentUser.stats = stats;
     if (!this.currentUser.history) this.currentUser.history = [];
-    this.currentUser.history.unshift(matchRecord); // newest first
+    this.currentUser.history.unshift(matchRecord);
 
     if (this.currentUser.history.length > 50) {
       this.currentUser.history.pop();
     }
 
-    // Persist
     if (this.currentUser.isGuest) {
       localStorage.setItem(this.STORAGE_KEY_GUEST, JSON.stringify(this.currentUser));
     } else {
@@ -210,9 +231,7 @@ class BingoAuthStorage {
     return matchRecord;
   }
 
-  // =========================================================================
-  // ACTIVE GAME STATE PERSISTENCE
-  // =========================================================================
+  // Active Game state persistence
   saveActiveGame(gameState) {
     if (!this.currentUser) return;
     try {
@@ -254,9 +273,6 @@ class BingoAuthStorage {
     localStorage.removeItem(this.STORAGE_KEY_ACTIVE_GAME);
   }
 
-  // =========================================================================
-  // LEADERBOARD AGGREGATION
-  // =========================================================================
   getLeaderboard() {
     const users = this.getAllUsers();
     const list = Object.values(users).map(u => {
@@ -287,7 +303,6 @@ class BingoAuthStorage {
       };
     });
 
-    // If current user is guest with games, include them in temporary session view
     if (this.currentUser && this.currentUser.isGuest && (this.currentUser.stats.wins > 0 || this.currentUser.stats.losses > 0)) {
       const gWins = this.currentUser.stats.wins;
       const gLosses = this.currentUser.stats.losses;
