@@ -36,11 +36,16 @@
     </nav>
 
     <div class="header-actions">
-      <!-- User Profile / Sign In Pill -->
+      <!-- User Profile / Account Pill -->
       <button class="user-account-btn" id="btn-header-profile" title="Account & Profile">
         <span class="user-avatar-small" id="header-user-avatar">👤</span>
         <span id="header-user-name">Sign In</span>
         <span id="header-user-streak" style="color:#f59e0b; display:none;">🔥 0</span>
+      </button>
+
+      <!-- Quick Sign Out Button in Header -->
+      <button class="signout-header-btn" id="btn-header-signout" title="Sign Out" style="display:none;">
+        🚪 Exit
       </button>
 
       <!-- Invite Link / QR (shown in multiplayer) -->
@@ -78,7 +83,7 @@
                 Unfinished Game Found!
               </div>
               <div style="font-size:0.88rem; color:#bae6fd;" id="resume-game-desc">
-                You have a saved game vs Computer from earlier. Pick up right where you left off!
+                You have a saved game from earlier. Pick up right where you left off!
               </div>
             </div>
           </div>
@@ -371,7 +376,109 @@
        MODALS
        ====================================================================== -->
 
-  <!-- User Account Sign In / Sign Up Modal -->
+  <!-- 1. WELCOME ENTRY GATE MODAL (Before Play: Guest vs Login vs Sign Up) -->
+  <div class="modal-overlay" id="modal-welcome-gate">
+    <div class="modal-content entry-gate-card">
+      <div style="font-size:2.8rem; margin-bottom:6px;">🎲</div>
+      <h2 style="font-size:1.6rem; font-weight:900; margin-bottom:4px;">Welcome to BINGO Party!</h2>
+      <p style="color:var(--text-muted); font-size:0.88rem;">
+        How would you like to play today?
+      </p>
+
+      <div class="entry-options-list">
+        <!-- Option 1: Play as Guest -->
+        <div class="entry-option-box" id="btn-entry-guest">
+          <span class="entry-option-icon">👤</span>
+          <div>
+            <div class="entry-option-title">Play as Guest</div>
+            <div class="entry-option-desc">Quick jump into the game with a temporary nickname. No PIN required.</div>
+          </div>
+        </div>
+
+        <!-- Option 2: Sign In -->
+        <div class="entry-option-box" id="btn-entry-signin">
+          <span class="entry-option-icon">🔑</span>
+          <div>
+            <div class="entry-option-title">Log In</div>
+            <div class="entry-option-desc">Sign into your existing account with username & PIN to access your rank.</div>
+          </div>
+        </div>
+
+        <!-- Option 3: Sign Up -->
+        <div class="entry-option-box" id="btn-entry-signup">
+          <span class="entry-option-icon">✨</span>
+          <div>
+            <div class="entry-option-title">Create Account</div>
+            <div class="entry-option-desc">Save your stats, climb the leaderboard, and unlock custom avatars.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. GUEST NICKNAME PROMPT MODAL -->
+  <div class="modal-overlay" id="modal-guest-prompt">
+    <div class="modal-content" style="text-align:center;">
+      <button class="modal-close" data-close-modal>&times;</button>
+      <div style="font-size:2.5rem; margin-bottom:6px;">👤</div>
+      <h3 style="margin-bottom:6px;">Play as Guest</h3>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:16px;">
+        Enter a nickname to show on the game board and in rooms:
+      </p>
+      <form id="form-guest-login">
+        <div class="form-group">
+          <input type="text" id="guest-nickname-input" class="input-text" placeholder="e.g. AcePlayer" maxlength="15" required autofocus>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:10px;">
+          🎮 Start Playing as Guest
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. USER PROFILE & SIGN OUT MODAL -->
+  <div class="modal-overlay" id="modal-profile">
+    <div class="modal-content">
+      <button class="modal-close" data-close-modal>&times;</button>
+      <div class="profile-card-modal-header">
+        <div class="profile-large-avatar" id="modal-profile-avatar">👤</div>
+        <h3 id="modal-profile-name" style="font-size:1.4rem; font-weight:900;">Username</h3>
+        <span class="profile-account-type-badge badge-registered" id="modal-profile-badge">Registered Player</span>
+      </div>
+
+      <div class="profile-stats-card" style="margin-bottom:20px;">
+        <div class="profile-stat-box">
+          <div class="profile-stat-val" id="profile-modal-wins">0</div>
+          <div class="profile-stat-lbl">Wins</div>
+        </div>
+        <div class="profile-stat-box">
+          <div class="profile-stat-val" id="profile-modal-losses">0</div>
+          <div class="profile-stat-lbl">Losses</div>
+        </div>
+        <div class="profile-stat-box">
+          <div class="profile-stat-val streak" id="profile-modal-streak">🔥 0</div>
+          <div class="profile-stat-lbl">Streak</div>
+        </div>
+      </div>
+
+      <!-- Guest Upgrade Prompt (if guest) -->
+      <div id="guest-upgrade-banner" style="display:none; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:12px; margin-bottom:16px; text-align:center;">
+        <div style="font-size:0.85rem; color:#fcd34d; margin-bottom:8px;">
+          💡 You are playing as Guest. Create a permanent account to save your rank on the leaderboard!
+        </div>
+        <button class="btn btn-warning btn-block" id="btn-upgrade-guest" style="padding:8px;">
+          ✨ Upgrade to Permanent Account
+        </button>
+      </div>
+
+      <!-- Sign Out Button -->
+      <button class="btn btn-danger btn-block btn-lg" id="btn-modal-signout">
+        🚪 Sign Out
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. SIGN IN / SIGN UP FORM MODAL -->
   <div class="modal-overlay" id="modal-auth">
     <div class="modal-content">
       <button class="modal-close" data-close-modal>&times;</button>
@@ -395,7 +502,7 @@
         </button>
       </form>
 
-      <!-- Sign Up Form (hidden by default) -->
+      <!-- Sign Up Form -->
       <form id="form-signup" style="display:none;">
         <div class="form-group">
           <label class="form-label" for="signup-username">Choose Username</label>
@@ -423,7 +530,7 @@
     </div>
   </div>
 
-  <!-- Board Inspector Modal (View past game boards from History) -->
+  <!-- 5. BOARD INSPECTOR MODAL -->
   <div class="modal-overlay" id="modal-board-inspect">
     <div class="modal-content" style="text-align:center;">
       <button class="modal-close" data-close-modal>&times;</button>
@@ -437,7 +544,7 @@
     </div>
   </div>
 
-  <!-- Invite / QR Code Modal -->
+  <!-- 6. INVITE / QR CODE MODAL -->
   <div class="modal-overlay" id="modal-invite">
     <div class="modal-content" style="text-align:center;">
       <button class="modal-close" data-close-modal>&times;</button>
@@ -461,7 +568,7 @@
     </div>
   </div>
 
-  <!-- Winner Celebration Modal -->
+  <!-- 7. WINNER CELEBRATION MODAL -->
   <div class="modal-overlay" id="modal-winner">
     <div class="modal-content" style="text-align:center;">
       <button class="modal-close" data-close-modal>&times;</button>
@@ -479,7 +586,7 @@
     </div>
   </div>
 
-  <!-- Rules Modal -->
+  <!-- 8. RULES MODAL -->
   <div class="modal-overlay" id="modal-rules">
     <div class="modal-content">
       <button class="modal-close" data-close-modal>&times;</button>

@@ -1,7 +1,7 @@
 /**
  * Classic 1-25 Pen-and-Paper BINGO - Main Application Coordinator
- * Handles Navigation, Authentication, Ongoing Game Resumption,
- * Match History with Dates, Leaderboard, and Realtime Gameplay.
+ * Handles Navigation, Authentication (Guest/Login/Signup), Sign Out,
+ * Welcome Gate, Ongoing Game Resumption, Match History, and Realtime Gameplay.
  */
 class BingoApp {
   constructor() {
@@ -29,8 +29,7 @@ class BingoApp {
     this.setupAuth();
     this.setupGameEvents();
     this.setupMultiplayerListeners();
-    this.refreshUserProfileUI();
-    this.checkSavedActiveGame();
+    this.checkInitialAuthGate();
     this.checkUrlRoomParam();
   }
 
@@ -48,6 +47,7 @@ class BingoApp {
       navButtons: document.querySelectorAll('.nav-link-btn'),
       btnHeaderLogo: document.getElementById('btn-header-logo'),
       btnHeaderProfile: document.getElementById('btn-header-profile'),
+      btnHeaderSignout: document.getElementById('btn-header-signout'),
       headerUserAvatar: document.getElementById('header-user-avatar'),
       headerUserName: document.getElementById('header-user-name'),
       headerUserStreak: document.getElementById('header-user-streak'),
@@ -110,6 +110,26 @@ class BingoApp {
       historyFeedContainer: document.getElementById('history-feed-container'),
 
       // Modals
+      modalWelcomeGate: document.getElementById('modal-welcome-gate'),
+      btnEntryGuest: document.getElementById('btn-entry-guest'),
+      btnEntrySignin: document.getElementById('btn-entry-signin'),
+      btnEntrySignup: document.getElementById('btn-entry-signup'),
+
+      modalGuestPrompt: document.getElementById('modal-guest-prompt'),
+      formGuestLogin: document.getElementById('form-guest-login'),
+      guestNicknameInput: document.getElementById('guest-nickname-input'),
+
+      modalProfile: document.getElementById('modal-profile'),
+      modalProfileAvatar: document.getElementById('modal-profile-avatar'),
+      modalProfileName: document.getElementById('modal-profile-name'),
+      modalProfileBadge: document.getElementById('modal-profile-badge'),
+      profileModalWins: document.getElementById('profile-modal-wins'),
+      profileModalLosses: document.getElementById('profile-modal-losses'),
+      profileModalStreak: document.getElementById('profile-modal-streak'),
+      guestUpgradeBanner: document.getElementById('guest-upgrade-banner'),
+      btnUpgradeGuest: document.getElementById('btn-upgrade-guest'),
+      btnModalSignout: document.getElementById('btn-modal-signout'),
+
       modalAuth: document.getElementById('modal-auth'),
       tabAuthSignin: document.getElementById('tab-auth-signin'),
       tabAuthSignup: document.getElementById('tab-auth-signup'),
@@ -148,6 +168,23 @@ class BingoApp {
       chatInput: document.getElementById('chat-input'),
       toastContainer: document.getElementById('toast-container')
     };
+  }
+
+  // Check auth on startup: if no session, ask user how they'd like to play
+  checkInitialAuthGate() {
+    if (!window.BingoAuthStorage.hasSession()) {
+      this.refreshUserProfileUI();
+      setTimeout(() => {
+        this.openWelcomeGate();
+      }, 350);
+    } else {
+      this.refreshUserProfileUI();
+      this.checkSavedActiveGame();
+    }
+  }
+
+  openWelcomeGate() {
+    this.dom.modalWelcomeGate.classList.add('active');
   }
 
   // =========================================================================
@@ -218,28 +255,72 @@ class BingoApp {
   }
 
   // =========================================================================
-  // USER AUTHENTICATION & PROFILES
+  // USER AUTHENTICATION & PROFILES & SIGN OUT
   // =========================================================================
   setupAuth() {
     this.selectedSignupAvatar = '🦊';
 
-    this.dom.btnHeaderProfile.addEventListener('click', () => {
-      this.dom.modalAuth.classList.add('active');
+    // 1. Welcome Gate Entry Options
+    this.dom.btnEntryGuest.addEventListener('click', () => {
+      this.dom.modalWelcomeGate.classList.remove('active');
+      this.dom.guestNicknameInput.value = '';
+      this.dom.modalGuestPrompt.classList.add('active');
     });
 
-    // Toggle Sign In vs Sign Up tabs
+    this.dom.btnEntrySignin.addEventListener('click', () => {
+      this.dom.modalWelcomeGate.classList.remove('active');
+      this.openAuthModal('signin');
+    });
+
+    this.dom.btnEntrySignup.addEventListener('click', () => {
+      this.dom.modalWelcomeGate.classList.remove('active');
+      this.openAuthModal('signup');
+    });
+
+    // 2. Guest Login Submit
+    this.dom.formGuestLogin.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nickname = this.dom.guestNicknameInput.value.trim();
+      const res = window.BingoAuthStorage.playAsGuest(nickname);
+      this.dom.modalGuestPrompt.classList.remove('active');
+      this.showToast(`Playing as Guest (${res.user.username})`, 3000);
+      this.refreshUserProfileUI();
+      this.checkSavedActiveGame();
+    });
+
+    // 3. Header Profile Pill Click -> Opens Profile Modal or Welcome Gate
+    this.dom.btnHeaderProfile.addEventListener('click', () => {
+      if (window.BingoAuthStorage.hasSession()) {
+        this.openProfileModal();
+      } else {
+        this.openWelcomeGate();
+      }
+    });
+
+    // 4. Quick Header Sign Out Button
+    this.dom.btnHeaderSignout.addEventListener('click', () => {
+      this.handleSignOut();
+    });
+
+    // 5. Modal Sign Out Button
+    this.dom.btnModalSignout.addEventListener('click', () => {
+      this.dom.modalProfile.classList.remove('active');
+      this.handleSignOut();
+    });
+
+    // 6. Upgrade Guest to Full Account
+    this.dom.btnUpgradeGuest.addEventListener('click', () => {
+      this.dom.modalProfile.classList.remove('active');
+      this.openAuthModal('signup');
+    });
+
+    // Toggle Sign In vs Sign Up tabs in Auth Modal
     this.dom.tabAuthSignin.addEventListener('click', () => {
-      this.dom.tabAuthSignin.classList.add('active');
-      this.dom.tabAuthSignup.classList.remove('active');
-      this.dom.formSignin.style.display = 'block';
-      this.dom.formSignup.style.display = 'none';
+      this.openAuthModal('signin');
     });
 
     this.dom.tabAuthSignup.addEventListener('click', () => {
-      this.dom.tabAuthSignup.classList.add('active');
-      this.dom.tabAuthSignin.classList.remove('active');
-      this.dom.formSignin.style.display = 'none';
-      this.dom.formSignup.style.display = 'block';
+      this.openAuthModal('signup');
     });
 
     // Avatar selector
@@ -285,12 +366,76 @@ class BingoApp {
     });
   }
 
-  refreshUserProfileUI() {
+  openAuthModal(tab = 'signin') {
+    if (tab === 'signin') {
+      this.dom.tabAuthSignin.classList.add('active');
+      this.dom.tabAuthSignup.classList.remove('active');
+      this.dom.formSignin.style.display = 'block';
+      this.dom.formSignup.style.display = 'none';
+    } else {
+      this.dom.tabAuthSignup.classList.add('active');
+      this.dom.tabAuthSignin.classList.remove('active');
+      this.dom.formSignin.style.display = 'none';
+      this.dom.formSignup.style.display = 'block';
+    }
+    this.dom.modalAuth.classList.add('active');
+  }
+
+  openProfileModal() {
     const user = window.BingoAuthStorage.currentUser;
     if (!user) return;
 
+    this.dom.modalProfileAvatar.textContent = user.avatar || '👤';
+    this.dom.modalProfileName.textContent = user.username;
+
+    if (user.isGuest) {
+      this.dom.modalProfileBadge.className = 'profile-account-type-badge badge-guest';
+      this.dom.modalProfileBadge.textContent = 'Guest Player';
+      this.dom.guestUpgradeBanner.style.display = 'block';
+    } else {
+      this.dom.modalProfileBadge.className = 'profile-account-type-badge badge-registered';
+      this.dom.modalProfileBadge.textContent = 'Registered Player';
+      this.dom.guestUpgradeBanner.style.display = 'none';
+    }
+
+    this.dom.profileModalWins.textContent = user.stats?.wins || 0;
+    this.dom.profileModalLosses.textContent = user.stats?.losses || 0;
+    this.dom.profileModalStreak.textContent = `🔥 ${user.stats?.streak || 0}`;
+
+    this.dom.modalProfile.classList.add('active');
+  }
+
+  handleSignOut() {
+    window.BingoAuthStorage.signOut();
+    this.showToast('Signed out.', 3000);
+    this.refreshUserProfileUI();
+    this.dom.resumeGameCard.style.display = 'none';
+    this.switchView('home');
+    setTimeout(() => {
+      this.openWelcomeGate();
+    }, 400);
+  }
+
+  refreshUserProfileUI() {
+    const user = window.BingoAuthStorage.currentUser;
+    if (!user) {
+      this.dom.headerUserAvatar.textContent = '👤';
+      this.dom.headerUserName.textContent = 'Sign In / Guest';
+      this.dom.headerUserStreak.style.display = 'none';
+      this.dom.btnHeaderSignout.style.display = 'none';
+
+      // Zero out stats on home page
+      this.dom.homeStatWins.textContent = '0';
+      this.dom.homeStatLosses.textContent = '0';
+      this.dom.homeStatWinrate.textContent = '0%';
+      this.dom.homeStatStreak.textContent = '🔥 0';
+      this.dom.homeStatRank.textContent = 'None';
+      return;
+    }
+
     this.dom.headerUserAvatar.textContent = user.avatar || '👤';
-    this.dom.headerUserName.textContent = user.username;
+    this.dom.headerUserName.textContent = user.username + (user.isGuest ? ' (Guest)' : '');
+    this.dom.btnHeaderSignout.style.display = 'inline-flex';
 
     const streak = user.stats?.streak || 0;
     if (streak > 0) {
@@ -300,17 +445,18 @@ class BingoApp {
       this.dom.headerUserStreak.style.display = 'none';
     }
 
-    // Home profile widget
     const wins = user.stats?.wins || 0;
     const losses = user.stats?.losses || 0;
     const total = wins + losses;
     const rate = total > 0 ? Math.round((wins / total) * 100) : 0;
 
-    let rankTitle = 'Novice';
-    if (wins >= 25) rankTitle = 'Legend 👑';
-    else if (wins >= 15) rankTitle = 'Grandmaster ⭐';
-    else if (wins >= 8) rankTitle = 'Sharp Shooter 🎯';
-    else if (wins >= 3) rankTitle = 'Veteran ⚡';
+    let rankTitle = user.isGuest ? 'Guest' : 'Novice';
+    if (!user.isGuest) {
+      if (wins >= 25) rankTitle = 'Legend 👑';
+      else if (wins >= 15) rankTitle = 'Grandmaster ⭐';
+      else if (wins >= 8) rankTitle = 'Sharp Shooter 🎯';
+      else if (wins >= 3) rankTitle = 'Veteran ⚡';
+    }
 
     this.dom.homeStatWins.textContent = wins;
     this.dom.homeStatLosses.textContent = losses;
@@ -319,10 +465,24 @@ class BingoApp {
     this.dom.homeStatRank.textContent = rankTitle;
   }
 
+  // Ensure user has chosen Guest or Account before starting a game
+  ensureUserSession() {
+    if (!window.BingoAuthStorage.hasSession()) {
+      this.openWelcomeGate();
+      return false;
+    }
+    return true;
+  }
+
   // =========================================================================
   // ONGOING GAME SAVING & RESUMPTION
   // =========================================================================
   checkSavedActiveGame() {
+    if (!window.BingoAuthStorage.hasSession()) {
+      this.dom.resumeGameCard.style.display = 'none';
+      return;
+    }
+
     const saved = window.BingoAuthStorage.loadActiveGame();
     if (saved && saved.gameBoard && saved.gameBoard.length === 25) {
       this.dom.resumeGameCard.style.display = 'flex';
@@ -382,6 +542,17 @@ class BingoApp {
     const list = window.BingoAuthStorage.getLeaderboard();
     const currentUsername = window.BingoAuthStorage.currentUser?.username;
     this.dom.leaderboardTbody.innerHTML = '';
+
+    if (list.length === 0) {
+      this.dom.leaderboardTbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted);">
+            No registered accounts yet! Create an account and play to claim the #1 spot on the leaderboard!
+          </td>
+        </tr>
+      `;
+      return;
+    }
 
     list.forEach((p, idx) => {
       const tr = document.createElement('tr');
@@ -484,21 +655,24 @@ class BingoApp {
   // GAME SETUP & GAMEPLAY EVENTS
   // =========================================================================
   setupGameEvents() {
-    // Home Play Buttons
     this.dom.btnHomePlayBot.addEventListener('click', () => {
+      if (!this.ensureUserSession()) return;
       this.startSoloBotGame();
     });
 
     this.dom.btnHomePlayMultiplayer.addEventListener('click', () => {
+      if (!this.ensureUserSession()) return;
       this.switchView('lobby');
     });
 
-    // Lobby Buttons
     this.dom.btnLobbyBot.addEventListener('click', () => {
+      if (!this.ensureUserSession()) return;
       this.startSoloBotGame();
     });
 
     this.dom.btnLobbyCreate.addEventListener('click', () => {
+      if (!this.ensureUserSession()) return;
+
       const code = 'BING' + Math.floor(10 + Math.random() * 90);
       this.state.mode = 'multiplayer';
       this.state.roomCode = code;
@@ -511,6 +685,8 @@ class BingoApp {
     });
 
     this.dom.btnLobbyJoin.addEventListener('click', () => {
+      if (!this.ensureUserSession()) return;
+
       const code = (this.dom.joinRoomInput.value || '').toUpperCase().trim();
       if (!code) {
         alert('Please enter a room code.');
@@ -631,7 +807,6 @@ class BingoApp {
     this.dom.setupWaitingIndicator.style.display = 'none';
     this.dom.setupPaletteContainer.style.display = 'block';
 
-    // Auto-fill random 1-25 board so player can immediately play
     const randomBoard = window.BingoLogic.generateRandomBoard();
     this.state.setupBoard = [...randomBoard];
     this.state.setupRemaining.clear();
@@ -700,13 +875,14 @@ class BingoApp {
     if (this.state.mode === 'bot') {
       this.state.botBoard = window.BingoLogic.generateRandomBoard();
       this.state.isOpponentReady = true;
-      this.startActiveGame(true); // Player starts first
+      this.startActiveGame(true);
     } else {
       this.dom.setupWaitingIndicator.style.display = 'block';
       this.dom.setupPaletteContainer.style.display = 'none';
 
+      const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
       window.BingoMultiplayer.send('PLAYER_READY', {
-        playerName: window.BingoAuthStorage.currentUser.username
+        playerName: myName
       });
 
       if (this.state.isOpponentReady) {
@@ -721,7 +897,6 @@ class BingoApp {
     }
   }
 
-  // Start Active Game
   startActiveGame(isMyTurn) {
     this.state.isMyTurn = isMyTurn;
     this.state.calledNumbers = new Set();
@@ -796,6 +971,8 @@ class BingoApp {
     if (!this.state.isMyTurn || this.state.isGameOver) return;
     if (this.state.calledNumbers.has(num)) return;
 
+    const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
+
     this.state.calledNumbers.add(num);
     this.state.turnCount++;
     window.bingoAudio.playStrike();
@@ -806,7 +983,7 @@ class BingoApp {
     if (this.state.mode === 'multiplayer') {
       window.BingoMultiplayer.send('NUMBER_CALLED', {
         number: num,
-        callerName: window.BingoAuthStorage.currentUser.username
+        callerName: myName
       });
     }
 
@@ -815,7 +992,7 @@ class BingoApp {
     this.saveCurrentGame();
 
     if (evaluation.isBingo) {
-      this.handleGameOver(window.BingoAuthStorage.currentUser.username, true);
+      this.handleGameOver(myName, true);
       return;
     }
 
@@ -834,6 +1011,8 @@ class BingoApp {
 
       const botPick = window.BingoLogic.getBestComputerMove(this.state.botBoard, this.state.calledNumbers);
       if (botPick === null) return;
+
+      const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
 
       this.state.calledNumbers.add(botPick);
       this.state.turnCount++;
@@ -855,7 +1034,7 @@ class BingoApp {
       } else if (botEval.isBingo) {
         this.handleGameOver(this.state.opponentName, false);
       } else if (myEval.isBingo) {
-        this.handleGameOver(window.BingoAuthStorage.currentUser.username, true);
+        this.handleGameOver(myName, true);
       } else {
         this.state.isMyTurn = true;
         this.updateTurnBanner();
@@ -884,8 +1063,8 @@ class BingoApp {
 
     const myEval = window.BingoLogic.evaluateBoard(this.state.gameBoard, this.state.calledNumbers);
     const result = isMe ? 'WON' : 'LOST';
+    const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
 
-    // Record to match history with date & time
     window.BingoAuthStorage.recordMatchResult({
       opponent: this.state.opponentName,
       mode: this.state.mode === 'bot' ? 'Solo vs Bot' : `Multiplayer (Room: ${this.state.roomCode})`,
@@ -907,12 +1086,12 @@ class BingoApp {
     } else {
       window.bingoAudio.playBingoWin();
       this.dom.winnerNameDisplay.textContent = `${winnerName} Won!`;
-      this.dom.winnerSubDisplay.textContent = `${winnerName} reached 5 lines first. Saved to your match history.`;
+      this.dom.winnerSubDisplay.textContent = `${winnerName} reached 5 lines first. Logged to your match history.`;
     }
 
     if (this.state.mode === 'multiplayer' && isMe) {
       window.BingoMultiplayer.send('BINGO_WIN', {
-        winnerName: window.BingoAuthStorage.currentUser.username
+        winnerName: myName
       });
     }
 
@@ -937,8 +1116,9 @@ class BingoApp {
         this.showToast(`👋 ${data.name} joined the room!`, 3000);
         window.bingoAudio.playPop();
 
+        const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
         window.BingoMultiplayer.send('PLAYER_ANNOUNCE', {
-          name: window.BingoAuthStorage.currentUser.username
+          name: myName
         });
       }
     });
@@ -968,6 +1148,8 @@ class BingoApp {
       const num = data.number;
       if (!num) return;
 
+      const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
+
       this.state.calledNumbers.add(num);
       this.state.turnCount++;
       window.bingoAudio.playStrike();
@@ -980,7 +1162,7 @@ class BingoApp {
       this.saveCurrentGame();
 
       if (evaluation.isBingo) {
-        this.handleGameOver(window.BingoAuthStorage.currentUser.username, true);
+        this.handleGameOver(myName, true);
         return;
       }
 
@@ -1009,8 +1191,9 @@ class BingoApp {
   }
 
   sendChatMessage(text) {
+    const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
     const msg = {
-      sender: window.BingoAuthStorage.currentUser.username,
+      sender: myName,
       text: text
     };
     window.BingoMultiplayer.send('CHAT', msg);

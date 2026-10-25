@@ -40,7 +40,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 12px;
+  padding: 6px 14px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-full);
@@ -57,7 +57,77 @@
 }
 
 .user-avatar-small {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+}
+
+.signout-header-btn {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.signout-header-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+}
+
+/* ==========================================================================
+   ENTRY WELCOME GATE MODAL
+   ========================================================================== */
+.entry-gate-card {
+  text-align: center;
+}
+
+.entry-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0 10px;
+}
+
+.entry-option-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.entry-option-box:hover {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: #38bdf8;
+  transform: translateY(-2px);
+}
+
+.entry-option-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.entry-option-title {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.entry-option-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 /* ==========================================================================
@@ -70,7 +140,6 @@
   padding: 10px 0 30px;
 }
 
-/* Resume Unfinished Game Alert Banner */
 .resume-game-banner {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(37, 99, 235, 0.25));
   border: 2px solid #38bdf8;
@@ -95,7 +164,6 @@
   font-size: 2rem;
 }
 
-/* Home Hero Area */
 .home-hero {
   text-align: center;
   padding: 24px 16px;
@@ -372,4 +440,36 @@
   border-color: #38bdf8;
   background: rgba(56, 189, 248, 0.2);
   transform: scale(1.15);
+}
+
+/* Profile Card Modal View */
+.profile-card-modal-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.profile-large-avatar {
+  font-size: 3.5rem;
+  margin-bottom: 6px;
+}
+
+.profile-account-type-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.badge-guest {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badge-registered {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
 }
