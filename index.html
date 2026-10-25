@@ -3,186 +3,112 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Bingo Party - Realtime Multiplayer Bingo</title>
-  
-  <!-- Meta & Social -->
-  <meta name="description" content="Play realtime multiplayer Bingo with friends on any phone, tablet, or laptop. Free, zero installation, and deployable on GitHub Pages.">
-  <meta name="theme-color" content="#0d1117">
+  <title>BINGO Party - Classic 1-25 Pen & Paper Game</title>
+
+  <!-- Meta & OpenGraph -->
+  <meta name="description" content="Play the classic 1-25 pen-and-paper BINGO game online with friends! Cross out lines to get B-I-N-G-O. Free, realtime, and zero install.">
+  <meta name="theme-color" content="#0b0f17">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/bingo-card.css">
-  <link rel="stylesheet" href="css/caller.css">
+  <link rel="stylesheet" href="css/bingo-paper.css">
 
-  <!-- PeerJS CDN (WebRTC P2P) -->
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <!-- MQTT over WebSockets CDN for Guaranteed Realtime Multiplayer -->
+  <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
 </head>
-<body class="dauber-red">
+<body>
 
   <!-- App Header -->
   <header class="app-header">
-    <div class="logo-area" id="btn-home">
+    <div class="logo-area" id="btn-header-logo">
       <div class="logo-icon">B</div>
-      <div class="logo-text">Bingo Party</div>
+      <div class="logo-text">BINGO Party</div>
     </div>
 
-    <!-- Active In-Game Status -->
-    <div id="header-room-status" style="display:none;" class="status-pill">
+    <!-- Active Status Pill -->
+    <div class="status-pill" id="header-status-pill">
       <span class="status-dot connected" id="network-status-dot"></span>
-      <span id="header-room-label">Room: <strong id="header-room-code">---</strong></span>
+      <span id="header-status-text">Classic 1-25</span>
     </div>
 
     <div class="header-actions">
-      <!-- Invite / Share Button -->
-      <button class="icon-btn" id="btn-open-invite" title="Invite Friends / QR Code" style="display:none;">
+      <!-- Invite / QR Code (Multiplayer only) -->
+      <button class="icon-btn" id="btn-header-invite" title="Invite Friends / QR Code" style="display:none;">
         🔗
       </button>
 
-      <!-- Player Roster Button -->
-      <button class="icon-btn" id="btn-open-players" title="Players in Room" style="display:none;">
-        👥 <span id="header-player-count" style="font-size:0.75rem; margin-left:2px; font-weight:700;">1</span>
-      </button>
-
-      <!-- Sound Effects Toggle -->
-      <button class="icon-btn" id="btn-toggle-sound" title="Toggle Sound">
+      <!-- Sound Toggle -->
+      <button class="icon-btn" id="btn-header-sound" title="Toggle Sound">
         🔊
       </button>
 
       <!-- Voice Caller Toggle -->
-      <button class="icon-btn" id="btn-toggle-voice" title="Toggle Voice Caller">
+      <button class="icon-btn" id="btn-header-voice" title="Toggle Voice Announcement">
         🗣️
       </button>
 
       <!-- Rules / Help -->
-      <button class="icon-btn" id="btn-open-rules" title="Game Rules">
+      <button class="icon-btn" id="btn-header-rules" title="How to Play">
         ❓
       </button>
     </div>
   </header>
 
-  <!-- Main View Router -->
+  <!-- Main View Area -->
   <main>
 
     <!-- ======================================================================
-         VIEW 1: LOBBY (Create / Join Game)
+         VIEW 1: LOBBY (Mode Selection)
          ====================================================================== -->
     <section id="view-lobby" class="view active">
       <div class="lobby-hero">
         <h1 class="lobby-title">
-          <span class="letter-b">B</span><span class="letter-i">I</span><span class="letter-n">N</span><span class="letter-g">G</span><span class="letter-o">O</span>
-          <span>PARTY</span>
+          <span class="b">B</span><span class="i">I</span><span class="n">N</span><span class="g">G</span><span class="o">O</span>
         </h1>
         <p class="lobby-subtitle">
-          Realtime multiplayer bingo for you and your friends! No app download needed — play together directly in your browser.
+          The nostalgic pen-and-paper game we all played in school! Cross out numbers, complete 5 lines to strike B - I - N - G - O, and win!
         </p>
 
+        <!-- Player Nickname -->
+        <div style="max-width:360px; margin:0 auto 28px;">
+          <label class="form-label" for="player-nickname">Your Nickname</label>
+          <input type="text" id="player-nickname" class="input-text" placeholder="e.g. Lucky Ace" maxlength="15">
+        </div>
+
+        <!-- Mode Cards -->
         <div class="lobby-grid">
 
-          <!-- Card 1: Host a Game -->
-          <div class="lobby-box">
-            <h2 class="lobby-box-title">👑 Host a Game</h2>
-            <p class="lobby-box-desc">Create a room and share the link or code with your friends.</p>
-
-            <form id="form-host-game">
-              <div class="form-group">
-                <label class="form-label" for="host-name">Your Name</label>
-                <input type="text" id="host-name" class="input-text" placeholder="e.g. Captain Lucky" maxlength="16" required>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="host-room-code">Room Code (or keep random)</label>
-                <input type="text" id="host-room-code" class="input-text input-code" maxlength="8" required>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="host-game-type">Game Mode</label>
-                <select id="host-game-type" class="input-select">
-                  <option value="classic">Classic 75-Ball (1 - 75)</option>
-                  <option value="tech">Tech & Dev Night</option>
-                  <option value="party">Party & Social</option>
-                  <option value="office">Office / Zoom Calls</option>
-                  <option value="custom">Custom Words (Your own list)</option>
-                </select>
-              </div>
-
-              <!-- Custom Wordlist Area (Hidden by default) -->
-              <div class="form-group" id="group-custom-words" style="display:none;">
-                <label class="form-label" for="host-custom-words">Custom Words (comma separated, min 24)</label>
-                <textarea id="host-custom-words" class="input-textarea" rows="3" placeholder="Apple, Banana, Orange, Mango, Grape..."></textarea>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="host-pattern">Winning Pattern</label>
-                <select id="host-pattern" class="input-select">
-                  <option value="line">Any Single Line (Row, Column, Diagonal)</option>
-                  <option value="any2">Any Two Lines</option>
-                  <option value="corners">Four Corners</option>
-                  <option value="cross">Plus / Cross (+)</option>
-                  <option value="stamp">Postage Stamp (2x2 Corner)</option>
-                  <option value="blackout">Blackout (Full Card!)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Pick Dauber Ink Color</label>
-                <div class="dauber-options" id="host-dauber-picker">
-                  <button type="button" class="dauber-color-btn active" data-color="red" style="background:#ef4444;"></button>
-                  <button type="button" class="dauber-color-btn" data-color="blue" style="background:#3b82f6;"></button>
-                  <button type="button" class="dauber-color-btn" data-color="green" style="background:#10b981;"></button>
-                  <button type="button" class="dauber-color-btn" data-color="purple" style="background:#8b5cf6;"></button>
-                  <button type="button" class="dauber-color-btn" data-color="gold" style="background:#f59e0b;"></button>
-                  <button type="button" class="dauber-color-btn" data-color="pink" style="background:#ec4899;"></button>
-                </div>
-              </div>
-
-              <div class="form-group" style="margin-bottom: 24px;">
-                <label class="toggle-switch-label">
-                  <input type="checkbox" id="host-is-playing" checked>
-                  <span>Host plays with a Bingo card</span>
-                </label>
-              </div>
-
-              <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-create-room">
-                🚀 Create Room
-              </button>
-            </form>
+          <!-- Option 1: Play vs Computer (Instant Solo Mode) -->
+          <div class="lobby-card">
+            <h2 class="lobby-card-title">🤖 Play vs Computer</h2>
+            <p class="lobby-card-desc">Practice and play solo immediately against a smart AI opponent. No waiting needed!</p>
+            <div style="flex:1;"></div>
+            <button class="btn btn-primary btn-block btn-lg" id="btn-start-vs-bot">
+              ⚡ Play Solo Now
+            </button>
           </div>
 
-          <!-- Card 2: Join a Game -->
-          <div class="lobby-box">
-            <h2 class="lobby-box-title">🎮 Join Game</h2>
-            <p class="lobby-box-desc">Enter the room code given by your host to jump in.</p>
+          <!-- Option 2: Host Online Room -->
+          <div class="lobby-card">
+            <h2 class="lobby-card-title">👑 Create Room</h2>
+            <p class="lobby-card-desc">Generate a room code and invite a friend with an instant link or QR code.</p>
+            <div style="flex:1;"></div>
+            <button class="btn btn-success btn-block btn-lg" id="btn-create-room">
+              🚀 Create Room
+            </button>
+          </div>
 
-            <form id="form-join-game">
-              <div class="form-group">
-                <label class="form-label" for="join-name">Your Name</label>
-                <input type="text" id="join-name" class="input-text" placeholder="e.g. Bingo Champion" maxlength="16" required>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="join-room-code">Room Code</label>
-                <input type="text" id="join-room-code" class="input-text input-code" placeholder="XYZ123" maxlength="8" required>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Pick Dauber Ink Color</label>
-                <div class="dauber-options" id="join-dauber-picker">
-                  <button type="button" class="dauber-color-btn active" data-color="blue" style="background:#3b82f6;"></button>
-                  <button type="button" class="dauber-color-btn" data-color="red" style="background:#ef4444;"></button>
-                  <button type="button" class="dauber-color-btn" data-color="green" style="background:#10b981;"></button>
-                  <button type="button" class="dauber-color-btn" data-color="purple" style="background:#8b5cf6;"></button>
-                  <button type="button" class="dauber-color-btn" data-color="gold" style="background:#f59e0b;"></button>
-                  <button type="button" class="dauber-color-btn" data-color="pink" style="background:#ec4899;"></button>
-                </div>
-              </div>
-
-              <div style="flex:1;"></div>
-
-              <button type="submit" class="btn btn-success btn-block btn-lg" id="btn-join-room" style="margin-top:20px;">
-                🎲 Join Game
-              </button>
-            </form>
+          <!-- Option 3: Join Room -->
+          <div class="lobby-card">
+            <h2 class="lobby-card-title">🎮 Join Game</h2>
+            <p class="lobby-card-desc">Enter your friend's 4-character room code to jump into their game.</p>
+            <div class="form-group" style="margin-bottom:12px;">
+              <input type="text" id="join-room-input" class="input-text input-code" placeholder="CODE" maxlength="6">
+            </div>
+            <button class="btn btn-warning btn-block" id="btn-join-room">
+              🎲 Join Room
+            </button>
           </div>
 
         </div>
@@ -190,161 +116,117 @@
     </section>
 
     <!-- ======================================================================
-         VIEW 2: GAMEPLAY SCREEN (Host & Player Combined)
+         VIEW 2: SETUP BOARD (Fill 1 to 25 Numbers)
+         ====================================================================== -->
+    <section id="view-setup" class="view">
+      <div style="text-align:center; margin-bottom:16px;">
+        <h2 style="font-size:1.6rem; font-weight:800; margin-bottom:4px;">Fill Your 5x5 Board</h2>
+        <p style="color:var(--text-muted); font-size:0.9rem;">
+          Place numbers 1 to 25 in any order you like, or tap <strong>Auto-Fill</strong>!
+        </p>
+      </div>
+
+      <!-- 5x5 Setup Grid -->
+      <div class="paper-board-wrapper">
+        <div class="paper-grid" id="setup-grid-element">
+          <!-- 25 slots rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Setup Control Actions -->
+      <div style="max-width:480px; margin:16px auto 0;">
+        <div class="setup-actions-row">
+          <button class="btn btn-secondary" id="btn-setup-shuffle">
+            🎲 Auto-Fill / Shuffle
+          </button>
+          <button class="btn btn-secondary" id="btn-setup-clear">
+            🔄 Clear
+          </button>
+          <button class="btn btn-success" id="btn-setup-ready" disabled>
+            ✅ Ready to Play!
+          </button>
+        </div>
+
+        <!-- Waiting Status Pill in Multiplayer -->
+        <div id="setup-waiting-indicator" style="display:none; text-align:center; margin-top:14px; font-weight:600; color:#38bdf8;">
+          ⏳ You are ready! Waiting for your opponent to finish their board...
+        </div>
+
+        <!-- Number Palette (1 to 25) for manual placement -->
+        <div class="setup-palette-card" id="setup-palette-container">
+          <div style="font-size:0.85rem; font-weight:700; color:var(--text-muted);">
+            Tap a number to place it in the next slot:
+          </div>
+          <div class="setup-palette-grid" id="setup-palette-grid">
+            <!-- 1 to 25 buttons rendered via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 3: ACTIVE GAMEPLAY SCREEN
          ====================================================================== -->
     <section id="view-game" class="view">
 
-      <!-- Top Room Bar -->
+      <!-- Game Top Info Bar -->
       <div class="game-top-bar">
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <div class="room-badge">
-            <span>Room:</span>
-            <span class="code" id="game-room-display">------</span>
-          </div>
-          <button class="btn btn-secondary" id="btn-copy-link" style="padding:4px 10px; font-size:0.8rem;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:700; font-size:0.9rem;" id="game-room-tag">Room: ABCD</span>
+          <button class="btn btn-secondary" id="btn-game-copy-link" style="padding:4px 10px; font-size:0.75rem;">
             📋 Copy Link
           </button>
-          <span class="pattern-tag" id="game-pattern-display">Pattern: Any Line</span>
         </div>
 
-        <div style="display:flex; align-items:center; gap:12px;">
-          <span style="font-size:0.85rem; color:var(--text-muted);" id="game-balls-called-counter">Called: 0 / 75</span>
-          <button class="btn btn-danger" id="btn-leave-room" style="padding:4px 10px; font-size:0.8rem;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="opponent-status-pill" id="opponent-status-display">
+            <span>Opponent:</span>
+            <strong id="opponent-name-display">Computer</strong>
+            <span id="opponent-lines-display">(0/5)</span>
+          </div>
+          <button class="btn btn-danger" id="btn-game-exit" style="padding:4px 10px; font-size:0.75rem;">
             Exit
           </button>
         </div>
       </div>
 
-      <!-- Main Game Grid Layout (Caller + Card) -->
-      <div class="game-layout">
+      <!-- The Iconic B - I - N - G - O Score Header -->
+      <div class="bingo-score-header">
+        <div class="bingo-letter-box letter-box-b" id="bingo-letter-0">B</div>
+        <div class="bingo-letter-box letter-box-i" id="bingo-letter-1">I</div>
+        <div class="bingo-letter-box letter-box-n" id="bingo-letter-2">N</div>
+        <div class="bingo-letter-box letter-box-g" id="bingo-letter-3">G</div>
+        <div class="bingo-letter-box letter-box-o" id="bingo-letter-4">O</div>
+      </div>
 
-        <!-- Column 1: Caller Board & Controls -->
-        <div class="caller-section">
+      <!-- Turn Banner -->
+      <div class="turn-banner my-turn" id="turn-banner">
+        <span id="turn-banner-icon">👉</span>
+        <span id="turn-banner-text">YOUR TURN! Pick any uncrossed number on your board.</span>
+      </div>
 
-          <!-- 3D Tumbler Ball Display -->
-          <div class="ball-stage">
-            <div class="ball-stage-header" id="caller-stage-title">Current Ball</div>
-            
-            <div class="bingo-ball-large ball-placeholder" id="current-ball-element">
-              <div class="ball-inner-circle">
-                <div class="ball-letter" id="current-ball-letter">-</div>
-                <div class="ball-number" id="current-ball-number">--</div>
-              </div>
-            </div>
+      <!-- Last Called Number Callout -->
+      <div class="latest-call-bar" id="latest-call-container">
+        <span>Latest Call:</span>
+        <div class="latest-call-badge" id="latest-call-number">-</div>
+        <span id="latest-call-caller" style="font-size:0.85rem; color:var(--text-muted);">(Game starting...)</span>
+      </div>
 
-            <!-- Auto Call Progress Bar -->
-            <div class="caller-timer-bar" id="auto-call-timer-bar" style="display:none;">
-              <div class="caller-timer-fill" id="auto-call-timer-fill"></div>
-            </div>
-          </div>
-
-          <!-- Host-Only Caller Controls -->
-          <div class="caller-controls-card" id="host-controls" style="display:none;">
-            <div class="caller-btn-group">
-              <button class="btn btn-primary" id="btn-call-ball">
-                🎯 Draw Ball
-              </button>
-              <button class="btn btn-secondary" id="btn-new-round">
-                🔄 New Round
-              </button>
-            </div>
-
-            <div class="auto-call-row">
-              <label class="toggle-switch-label">
-                <input type="checkbox" id="toggle-auto-call">
-                <span>Auto Caller</span>
-              </label>
-
-              <select id="auto-call-speed" class="input-select" style="width:110px; padding:4px 8px; font-size:0.85rem;">
-                <option value="4000">4s (Fast)</option>
-                <option value="6000" selected>6s (Normal)</option>
-                <option value="9000">9s (Relaxed)</option>
-                <option value="12000">12s (Slow)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Recent Called Balls Reel -->
-          <div class="card-glass" style="padding: 12px 16px;">
-            <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">
-              Recent Balls
-            </div>
-            <div class="recent-balls-bar" id="recent-balls-container">
-              <span style="font-size:0.85rem; color:var(--text-muted);">No balls called yet</span>
-            </div>
-          </div>
-
-          <!-- Master Board (Collapsible 75-Ball Board) -->
-          <div class="master-board-card">
-            <div class="master-board-header">
-              <span>Master Board</span>
-              <button class="btn btn-secondary" id="btn-toggle-master-board" style="padding:2px 8px; font-size:0.75rem;">
-                Toggle Grid
-              </button>
-            </div>
-            <div id="master-board-grid">
-              <!-- Dynamically rendered B, I, N, G, O rows -->
-            </div>
-          </div>
-
+      <!-- 5x5 Main Game Board -->
+      <div class="paper-board-wrapper">
+        <div class="paper-grid" id="game-grid-element">
+          <!-- 25 active game cells rendered via JS -->
         </div>
+      </div>
 
-        <!-- Column 2: Player's Bingo Card -->
-        <div class="card-container" id="player-card-container">
-
-          <!-- 1 Away from Bingo Pulsing Alert -->
-          <div class="near-bingo-banner" id="near-bingo-alert">
-            <span>🔥</span>
-            <span>YOU ARE 1 AWAY FROM BINGO!</span>
-            <span>🔥</span>
-          </div>
-
-          <!-- 5x5 Tactile Bingo Card -->
-          <div class="bingo-card-wrapper" id="bingo-card-element">
-            <div class="bingo-grid" id="bingo-grid-element">
-              <!-- Rendered via JS -->
-            </div>
-          </div>
-
-          <!-- Giant BINGO Claim Button -->
-          <div class="bingo-btn-area">
-            <button class="btn-bingo-claim" id="btn-claim-bingo" disabled>
-              ⚡ BINGO! ⚡
-            </button>
-          </div>
-
-          <!-- Card Tools Bar -->
-          <div class="card-tools-bar">
-            <label class="toggle-switch-label" title="Automatically mark called numbers on your card">
-              <input type="checkbox" id="toggle-auto-daub">
-              <span>Auto-Daub</span>
-            </label>
-
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span>Dauber:</span>
-              <div class="dauber-options" id="in-game-dauber-picker" style="margin:0;">
-                <button type="button" class="dauber-color-btn" data-color="red" style="width:24px;height:24px;background:#ef4444;"></button>
-                <button type="button" class="dauber-color-btn" data-color="blue" style="width:24px;height:24px;background:#3b82f6;"></button>
-                <button type="button" class="dauber-color-btn" data-color="green" style="width:24px;height:24px;background:#10b981;"></button>
-                <button type="button" class="dauber-color-btn" data-color="purple" style="width:24px;height:24px;background:#8b5cf6;"></button>
-                <button type="button" class="dauber-color-btn" data-color="gold" style="width:24px;height:24px;background:#f59e0b;"></button>
-                <button type="button" class="dauber-color-btn" data-color="pink" style="width:24px;height:24px;background:#ec4899;"></button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Emoji Reactions Bar -->
-          <div class="reaction-bar">
-            <button class="reaction-btn" data-emoji="🎉" title="Confetti">🎉</button>
-            <button class="reaction-btn" data-emoji="🔥" title="Fire">🔥</button>
-            <button class="reaction-btn" data-emoji="🍀" title="Luck">🍀</button>
-            <button class="reaction-btn" data-emoji="😱" title="Shock">😱</button>
-            <button class="reaction-btn" data-emoji="😂" title="Laugh">😂</button>
-            <button class="reaction-btn" data-emoji="👏" title="Applause">👏</button>
-          </div>
-
-        </div>
-
+      <!-- Quick Reaction Emojis -->
+      <div class="reaction-bar">
+        <button class="reaction-btn" data-emoji="🎉" title="Party">🎉</button>
+        <button class="reaction-btn" data-emoji="🔥" title="Fire">🔥</button>
+        <button class="reaction-btn" data-emoji="🍀" title="Luck">🍀</button>
+        <button class="reaction-btn" data-emoji="😱" title="Shock">😱</button>
+        <button class="reaction-btn" data-emoji="😂" title="Laugh">😂</button>
+        <button class="reaction-btn" data-emoji="👏" title="Applause">👏</button>
       </div>
 
     </section>
@@ -352,48 +234,32 @@
   </main>
 
   <!-- ======================================================================
-       MODALS & FLOATING OVERLAYS
+       MODALS & FLOATING DRAWERS
        ====================================================================== -->
 
-  <!-- Invite / Share QR Code Modal -->
+  <!-- Invite / QR Code Modal -->
   <div class="modal-overlay" id="modal-invite">
     <div class="modal-content" style="text-align:center;">
       <button class="modal-close" data-close-modal>&times;</button>
-      <h3 style="margin-bottom:8px;">Invite Friends</h3>
-      <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">
-        Scan this QR code with any phone camera or share the room link!
+      <h3 style="margin-bottom:6px;">Invite a Friend</h3>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:14px;">
+        Share this code or scan with any mobile camera:
       </p>
 
-      <div id="modal-qr-container" style="display:flex; justify-content:center; margin:16px 0;"></div>
+      <div id="modal-qr-container" style="display:flex; justify-content:center; margin:14px 0;"></div>
 
-      <div class="form-group" style="margin-top:16px;">
+      <div class="form-group">
         <label class="form-label">Room Code</label>
-        <div style="font-size:1.8rem; font-weight:900; letter-spacing:2px; color:var(--accent-gold);" id="modal-room-code">
-          ------
+        <div style="font-size:2rem; font-weight:900; letter-spacing:4px; color:var(--accent-gold);" id="modal-room-code-display">
+          ----
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Direct Invite Link</label>
         <div style="display:flex; gap:8px;">
           <input type="text" id="modal-invite-link-input" class="input-text" readonly style="font-size:0.85rem;">
           <button class="btn btn-primary" id="btn-copy-modal-link">Copy</button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Player Roster Modal -->
-  <div class="modal-overlay" id="modal-players">
-    <div class="modal-content">
-      <button class="modal-close" data-close-modal>&times;</button>
-      <h3 style="margin-bottom:6px;">Players in Room (<span id="modal-player-count">1</span>)</h3>
-      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:16px;">
-        Live roster and daubing progress.
-      </p>
-
-      <div class="players-list" id="modal-players-list">
-        <!-- Rendered via JS -->
       </div>
     </div>
   </div>
@@ -404,45 +270,51 @@
       <button class="modal-close" data-close-modal>&times;</button>
       <div class="winner-banner">
         <div class="trophy-icon">🏆</div>
-        <h2 style="font-size:1.4rem; color:#9ca3af; text-transform:uppercase; letter-spacing:2px;">BINGO WINNER!</h2>
-        <div class="winner-name" id="winner-name-display">Lucky Player</div>
-        <p style="font-size:1rem; color:var(--text-main); margin-bottom:18px;" id="winner-details-display">
-          Won with a Single Line!
+        <h2 style="font-size:1.6rem; color:#f59e0b; font-family:var(--font-display); letter-spacing:2px;">B - I - N - G - O !</h2>
+        <div class="winner-name" id="winner-name-display">You Won!</div>
+        <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:20px;" id="winner-sub-display">
+          Completed all 5 lines first!
         </p>
-        <button class="btn btn-primary btn-lg btn-block" id="btn-winner-continue">
-          🎉 Continue Playing / New Round
+        <button class="btn btn-primary btn-lg btn-block" id="btn-play-again">
+          🔄 Play Rematch
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Rules / Instructions Modal -->
+  <!-- Rules Modal -->
   <div class="modal-overlay" id="modal-rules">
     <div class="modal-content">
       <button class="modal-close" data-close-modal>&times;</button>
-      <h3 style="margin-bottom:12px;">How to Play Bingo Party</h3>
-      <div style="font-size:0.9rem; line-height:1.6; color:#d1d5db; display:flex; flex-direction:column; gap:10px;">
-        <p><strong>1. Join or Host:</strong> Host creates a room and sends the code or link to friends. Friends join on their phone or computer.</p>
-        <p><strong>2. The Card:</strong> Each player gets a randomized 5x5 card. The center tile is a <strong>FREE</strong> space!</p>
-        <p><strong>3. Calling Balls:</strong> The host draws balls (manually or auto-caller). Listen to the voice caller and watch the 3D ball tumbler.</p>
-        <p><strong>4. Daubing:</strong> Tap matching numbers on your card to stamp them. Enable <em>Auto-Daub</em> if you want hands-free marking!</p>
-        <p><strong>5. Claiming BINGO:</strong> When you complete the winning pattern, the giant golden <strong>⚡ BINGO! ⚡</strong> button unlocks. Tap it to claim victory and launch the confetti!</p>
+      <h3 style="margin-bottom:12px;">How to Play Classic 1-25 BINGO</h3>
+      <div style="font-size:0.9rem; line-height:1.6; color:#cbd5e1; display:flex; flex-direction:column; gap:10px;">
+        <p><strong>1. Fill Your Board:</strong> Fill your 5x5 grid with numbers 1 to 25. You can place them manually or hit <em>Auto-Fill / Shuffle</em>.</p>
+        <p><strong>2. Take Turns:</strong> On your turn, tap any uncrossed number on your grid to call it. That number is crossed out on <strong>BOTH</strong> players' grids!</p>
+        <p><strong>3. Complete Lines:</strong> A line is 5 crossed numbers in a horizontal row, vertical column, or diagonal line (12 possible lines).</p>
+        <p><strong>4. Earn Letters:</strong>
+          <br>• 1st Line = <strong>B</strong> is crossed out!
+          <br>• 2nd Line = <strong>I</strong> is crossed out!
+          <br>• 3rd Line = <strong>N</strong> is crossed out!
+          <br>• 4th Line = <strong>G</strong> is crossed out!
+          <br>• 5th Line = <strong>O</strong> is crossed out!
+        </p>
+        <p><strong>5. BINGO Win:</strong> The first player to complete 5 lines gets all <strong>B - I - N - G - O</strong> letters and wins the game!</p>
       </div>
     </div>
   </div>
 
-  <!-- Floating Reaction Container (Spawns floating emojis) -->
+  <!-- Floating Reaction Container -->
   <div class="reaction-container" id="reaction-container"></div>
 
-  <!-- Chat Drawer -->
+  <!-- Realtime In-Game Chat Drawer -->
   <div class="chat-drawer" id="chat-drawer">
     <div class="chat-header" id="chat-header-toggle">
-      <span>💬 Room Chat</span>
+      <span>💬 Live Chat</span>
       <span id="chat-toggle-icon">▲</span>
     </div>
     <div class="chat-messages" id="chat-messages">
       <div class="chat-msg" style="color:var(--text-muted); font-style:italic;">
-        Welcome to the room! Send a message or react.
+        Welcome to the room! Send a message or chat with friends.
       </div>
     </div>
     <form class="chat-input-row" id="chat-form">
@@ -458,8 +330,8 @@
   <script src="js/confetti.js"></script>
   <script src="js/qrcode-lib.js"></script>
   <script src="js/audio.js"></script>
-  <script src="js/bingo-engine.js"></script>
-  <script src="js/network.js"></script>
+  <script src="js/bingo-logic.js"></script>
+  <script src="js/multiplayer.js"></script>
   <script src="js/app.js"></script>
 
 </body>

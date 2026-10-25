@@ -1,14 +1,12 @@
 /**
- * Web Audio API Synthesizer & SpeechSynthesis Audio System
- * Zero external audio files required. Runs 100% offline and in all modern browsers.
+ * Web Audio API Synthesizer for Authentic Pen-and-Paper BINGO
+ * Zero external MP3 files needed. Works 100% offline and in all modern browsers.
  */
 class BingoAudio {
   constructor() {
     this.ctx = null;
-    this.isMuted = localStorage.getItem('bingo_muted') === 'true';
-    this.voiceEnabled = localStorage.getItem('bingo_voice') !== 'false'; // default true
-    this.selectedVoice = null;
-    this.initVoices();
+    this.isMuted = localStorage.getItem('bingo_paper_muted') === 'true';
+    this.voiceEnabled = localStorage.getItem('bingo_paper_voice') === 'true'; // default off
   }
 
   getAudioContext() {
@@ -24,151 +22,138 @@ class BingoAudio {
     return this.ctx;
   }
 
-  initVoices() {
-    if (!('speechSynthesis' in window)) return;
-    const loadVoices = () => {
-      const voices = window.speechSynthesis.getVoices();
-      // Try to find a clear English voice
-      this.selectedVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Daniel'))) || voices.find(v => v.lang.startsWith('en')) || voices[0];
-    };
-    loadVoices();
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
-    }
-  }
-
   toggleMute() {
     this.isMuted = !this.isMuted;
-    localStorage.setItem('bingo_muted', this.isMuted);
+    localStorage.setItem('bingo_paper_muted', this.isMuted);
     return this.isMuted;
   }
 
   toggleVoice() {
     this.voiceEnabled = !this.voiceEnabled;
-    localStorage.setItem('bingo_voice', this.voiceEnabled);
+    localStorage.setItem('bingo_paper_voice', this.voiceEnabled);
     return this.voiceEnabled;
   }
 
-  // Synthesized tactile daub stamp sound
-  playDaub() {
+  // Realistic scratch / pen strike sound when crossing out a number
+  playStrike() {
     if (this.isMuted) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
+    
+    // Noise buffer for pencil scratch texture
+    const bufferSize = ctx.sampleRate * 0.08;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.5;
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1800, now);
+    filter.Q.setValueAtTime(3, now);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+
+    // Fast low thud oscillator
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(260, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.06);
+    oscGain.gain.setValueAtTime(0.25, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+
+    noise.start(now);
+    noise.stop(now + 0.08);
+
+    osc.start(now);
+    osc.stop(now + 0.08);
+  }
+
+  // Celebratory letter cross chime (when B, I, N, G, or O is crossed out!)
+  playLetterCross(letterIndex = 0) {
+    if (this.isMuted) return;
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    // Ascending pitch for B (C5), I (E5), N (G5), G (B5), O (C6)
+    const pitches = [523.25, 659.25, 783.99, 987.77, 1046.50];
+    const freq = pitches[Math.min(pitches.length - 1, letterIndex)] || 659.25;
+
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(320, now);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+    osc.frequency.setValueAtTime(freq, now);
 
-    gain.gain.setValueAtTime(0.4, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.1);
-  }
-
-  playUnDaub() {
-    if (this.isMuted) return;
-    const ctx = this.getAudioContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.exponentialRampToValueAtTime(340, now + 0.05);
-
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start(now);
-    osc.stop(now + 0.07);
+    osc.stop(now + 0.55);
   }
 
-  // Pleasant bell chime when a ball is drawn
-  playBallDraw() {
+  // Pleasant notification bell when it becomes YOUR turn
+  playYourTurn() {
     if (this.isMuted) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
-    // Chime chord [C5, G5, C6]
-    const freqs = [523.25, 783.99, 1046.50];
-
-    freqs.forEach((freq, idx) => {
+    [783.99, 1046.50].forEach((freq, idx) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
 
-      gain.gain.setValueAtTime(0.18, now + idx * 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.04 + 0.45);
+      gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
-      osc.start(now + idx * 0.04);
-      osc.stop(now + idx * 0.04 + 0.5);
+      osc.start(now + idx * 0.08);
+      osc.stop(now + idx * 0.08 + 0.35);
     });
   }
 
-  // Tense chord when 1 away from Bingo
-  playNearBingo() {
+  // Grand victory fanfare on BINGO win
+  playBingoWin() {
     if (this.isMuted) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
-    const notes = [440, 554.37, 659.25, 880]; // A Major sparkle
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + i * 0.07);
-
-      gain.gain.setValueAtTime(0.2, now + i * 0.07);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.35);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now + i * 0.07);
-      osc.stop(now + i * 0.07 + 0.4);
-    });
-  }
-
-  // Grand celebratory fanfare on BINGO win
-  playWinFanfare() {
-    if (this.isMuted) return;
-    const ctx = this.getAudioContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    // Triumphant fanfare notes: C4, G4, C5, E5, G5, C6 (extended arpeggio)
-    const melody = [
-      { freq: 261.63, delay: 0.00, dur: 0.15 },
-      { freq: 329.63, delay: 0.12, dur: 0.15 },
-      { freq: 392.00, delay: 0.24, dur: 0.15 },
-      { freq: 523.25, delay: 0.38, dur: 0.25 },
-      { freq: 659.25, delay: 0.60, dur: 0.15 },
-      { freq: 783.99, delay: 0.75, dur: 0.20 },
-      { freq: 1046.50, delay: 0.98, dur: 0.80 }
+    const notes = [
+      { freq: 523.25, delay: 0.00, dur: 0.15 },
+      { freq: 659.25, delay: 0.14, dur: 0.15 },
+      { freq: 783.99, delay: 0.28, dur: 0.18 },
+      { freq: 1046.50, delay: 0.46, dur: 0.45 },
+      { freq: 880.00, delay: 0.70, dur: 0.18 },
+      { freq: 1046.50, delay: 0.90, dur: 0.80 }
     ];
 
-    melody.forEach(note => {
+    notes.forEach(note => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -186,33 +171,8 @@ class BingoAudio {
     });
   }
 
-  // Gentle buzzer if false bingo
-  playError() {
-    if (this.isMuted) return;
-    const ctx = this.getAudioContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    [0, 0.15].forEach(t => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(140, now + t);
-
-      gain.gain.setValueAtTime(0.2, now + t);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + t + 0.1);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now + t);
-      osc.stop(now + t + 0.12);
-    });
-  }
-
-  // Reaction pop
-  playReaction() {
+  // Gentle pop for button or emoji reaction
+  playPop() {
     if (this.isMuted) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
@@ -222,38 +182,26 @@ class BingoAudio {
     const gain = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(600 + Math.random() * 200, now);
-    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.06);
+    osc.frequency.setValueAtTime(450, now);
+    osc.frequency.exponentialRampToValueAtTime(900, now + 0.05);
 
     gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start(now);
-    osc.stop(now + 0.08);
+    osc.stop(now + 0.07);
   }
 
-  // Natural Speech caller: "B 12", "Free Space", "I 24"
-  speakBall(label) {
+  // Voice caller (optional)
+  speakNumber(num) {
     if (this.isMuted || !this.voiceEnabled || !('speechSynthesis' in window)) return;
-
-    window.speechSynthesis.cancel(); // cancel pending speech
-
-    let textToSpeak = label;
-    // Format "B-12" to "B, 12" for clear pronunciation
-    if (label && label.includes('-')) {
-      const parts = label.split('-');
-      textToSpeak = `${parts[0]}... ${parts[1]}`;
-    }
-
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.05;
-    if (this.selectedVoice) {
-      utterance.voice = this.selectedVoice;
-    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(String(num));
+    utterance.rate = 1.05;
+    utterance.pitch = 1.0;
     window.speechSynthesis.speak(utterance);
   }
 }
