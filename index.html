@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>BINGO Party - Classic 1-25 Pen & Paper Multiplayer</title>
 
   <!-- Prevent Browser Stale Cache -->
@@ -10,15 +10,19 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
-  <!-- Meta & Social -->
-  <meta name="description" content="Play the classic 1-25 pen-and-paper BINGO game online with friends! Track your stats, sign in, climb the leaderboard, and resume games anytime.">
+  <!-- Mobile & PWA App Features -->
   <meta name="theme-color" content="#0b0f17">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=2.2.1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BINGO">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=2.2.2">
+  <link rel="apple-touch-icon" href="assets/favicon.svg?v=2.2.2">
 
   <!-- Automated Storage Cache Invalidator Script (Runs Before Render) -->
   <script>
     (function() {
-      var LATEST_VERSION = '2.2.1';
+      var LATEST_VERSION = '2.2.2';
       var currentVer = localStorage.getItem('bingo_cache_version');
       if (currentVer !== LATEST_VERSION) {
         var legacyKeys = [
@@ -35,24 +39,24 @@
     })();
   </script>
 
-  <!-- Versioned Stylesheets for Instant Cache Invalidation -->
-  <link rel="stylesheet" href="css/style.css?v=2.2.1">
-  <link rel="stylesheet" href="css/bingo-paper.css?v=2.2.1">
-  <link rel="stylesheet" href="css/leaderboard.css?v=2.2.1">
+  <!-- Versioned Stylesheets for Instant Mobile Responsiveness -->
+  <link rel="stylesheet" href="css/style.css?v=2.2.2">
+  <link rel="stylesheet" href="css/bingo-paper.css?v=2.2.2">
+  <link rel="stylesheet" href="css/leaderboard.css?v=2.2.2">
 
   <!-- MQTT over WebSockets CDN -->
   <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
 </head>
 <body>
 
-  <!-- App Header & Navigation -->
+  <!-- App Header (Desktop Nav + Mobile Compact Header) -->
   <header class="app-header">
     <div class="logo-area" id="btn-header-logo">
       <div class="logo-icon">B</div>
       <div class="logo-text">BINGO Party</div>
     </div>
 
-    <!-- Navigation Tabs -->
+    <!-- Desktop Navigation Tabs (Hidden on mobile) -->
     <nav class="header-nav">
       <button class="nav-link-btn active" data-nav="home">🏠 Home</button>
       <button class="nav-link-btn" data-nav="lobby">🎮 Play</button>
@@ -99,24 +103,24 @@
     <section id="view-home" class="view active">
       <div class="home-container">
 
-        <!-- Ongoing Game Resumption Card (Shown if unfinished game is saved) -->
+        <!-- Ongoing Game Resumption Card -->
         <div class="resume-game-banner" id="resume-game-card" style="display:none;">
           <div class="resume-info">
             <span class="resume-icon">⚡</span>
             <div>
-              <div style="font-weight:900; font-size:1.1rem; color:#f8fafc;">
+              <div style="font-weight:900; font-size:1.05rem; color:#f8fafc;">
                 Unfinished Game Found!
               </div>
-              <div style="font-size:0.88rem; color:#bae6fd;" id="resume-game-desc">
+              <div style="font-size:0.85rem; color:#bae6fd;" id="resume-game-desc">
                 You have a saved game from earlier. Pick up right where you left off!
               </div>
             </div>
           </div>
-          <div style="display:flex; gap:8px;">
+          <div style="display:flex; gap:8px; width:100%; justify-content:flex-end;">
             <button class="btn btn-primary" id="btn-resume-game">
               ▶️ Resume Game
             </button>
-            <button class="btn btn-secondary" id="btn-discard-game" style="font-size:0.85rem; padding:8px 14px;">
+            <button class="btn btn-secondary" id="btn-discard-game" style="font-size:0.85rem; padding:8px 12px;">
               Discard
             </button>
           </div>
@@ -163,22 +167,22 @@
             <div class="profile-stat-lbl">Win Streak</div>
           </div>
           <div class="profile-stat-box">
-            <div class="profile-stat-val" id="home-stat-rank" style="font-size:1.2rem; color:#38bdf8;">Novice</div>
+            <div class="profile-stat-val" id="home-stat-rank" style="font-size:1.15rem; color:#38bdf8;">Novice</div>
             <div class="profile-stat-lbl">Rank Title</div>
           </div>
         </div>
 
         <!-- How It Works Quick Card -->
-        <div class="card-glass" style="padding:22px; margin-top:8px;">
-          <h3 style="margin-bottom:10px; font-size:1.15rem; display:flex; align-items:center; gap:8px;">
+        <div class="card-glass" style="padding:18px; margin-top:4px;">
+          <h3 style="margin-bottom:8px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
             📖 The Rules at a Glance
           </h3>
-          <div style="font-size:0.9rem; color:#cbd5e1; line-height:1.6; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+          <div style="font-size:0.88rem; color:#cbd5e1; line-height:1.6; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
             <div>
-              <strong>1. Fill 1 to 25:</strong> Arrange numbers 1 through 25 in any order on your 5x5 board, or click Auto-Fill.
+              <strong>1. Fill 1 to 25:</strong> Arrange numbers 1 through 25 on your 5x5 board, or tap Auto-Fill.
             </div>
             <div>
-              <strong>2. Take Turns:</strong> On your turn, call any uncrossed number. It gets struck out on <em>both</em> players' grids!
+              <strong>2. Take Turns:</strong> On your turn, call any uncrossed number. It strikes out on <em>both</em> players' grids!
             </div>
             <div>
               <strong>3. Cross B-I-N-G-O:</strong> Each completed row, column, or diagonal line crosses out the next letter in B-I-N-G-O.
@@ -197,7 +201,7 @@
          ====================================================================== -->
     <section id="view-lobby" class="view">
       <div class="lobby-hero">
-        <h2 style="font-size:2rem; font-weight:900; margin-bottom:8px;">Choose Game Mode</h2>
+        <h2 style="font-size:1.8rem; font-weight:900; margin-bottom:6px;">Choose Game Mode</h2>
         <p class="lobby-subtitle">Play solo or challenge your friends in a private room.</p>
 
         <div class="lobby-grid">
@@ -240,10 +244,10 @@
          VIEW 3: SETUP BOARD (Fill 1 to 25 Numbers)
          ====================================================================== -->
     <section id="view-setup" class="view">
-      <div style="text-align:center; margin-bottom:16px;">
-        <h2 style="font-size:1.6rem; font-weight:800; margin-bottom:4px;">Set Up Your 5x5 Board</h2>
-        <p style="color:var(--text-muted); font-size:0.9rem;">
-          Place numbers 1 to 25 in any order you like, or tap <strong>Auto-Fill</strong>!
+      <div style="text-align:center; margin-bottom:12px;">
+        <h2 style="font-size:1.45rem; font-weight:800; margin-bottom:4px;">Set Up Your 5x5 Board</h2>
+        <p style="color:var(--text-muted); font-size:0.85rem;">
+          Place numbers 1 to 25 in any order, or tap <strong>Auto-Fill</strong>!
         </p>
       </div>
 
@@ -251,25 +255,25 @@
         <div class="paper-grid" id="setup-grid-element"></div>
       </div>
 
-      <div style="max-width:480px; margin:16px auto 0;">
+      <div style="max-width:480px; margin:14px auto 0;">
         <div class="setup-actions-row">
           <button class="btn btn-secondary" id="btn-setup-shuffle">
-            🎲 Auto-Fill / Shuffle
+            🎲 Auto-Fill
           </button>
           <button class="btn btn-secondary" id="btn-setup-clear">
             🔄 Clear
           </button>
           <button class="btn btn-success" id="btn-setup-ready" disabled>
-            ✅ Ready to Play!
+            ✅ Ready!
           </button>
         </div>
 
-        <div id="setup-waiting-indicator" style="display:none; text-align:center; margin-top:14px; font-weight:600; color:#38bdf8;">
-          ⏳ You are ready! Waiting for your opponent to finish their board...
+        <div id="setup-waiting-indicator" style="display:none; text-align:center; margin-top:12px; font-weight:600; color:#38bdf8; font-size:0.9rem;">
+          ⏳ Ready! Waiting for your opponent to finish...
         </div>
 
         <div class="setup-palette-card" id="setup-palette-container">
-          <div style="font-size:0.85rem; font-weight:700; color:var(--text-muted);">
+          <div style="font-size:0.82rem; font-weight:700; color:var(--text-muted);">
             Tap a number to place it in the next slot:
           </div>
           <div class="setup-palette-grid" id="setup-palette-grid"></div>
@@ -283,20 +287,20 @@
     <section id="view-game" class="view">
 
       <div class="game-top-bar">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="font-weight:700; font-size:0.9rem;" id="game-room-tag">Solo vs Bot</span>
-          <button class="btn btn-secondary" id="btn-game-copy-link" style="padding:4px 10px; font-size:0.75rem;">
-            📋 Copy Link
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-weight:700; font-size:0.85rem;" id="game-room-tag">Solo vs Bot</span>
+          <button class="btn btn-secondary" id="btn-game-copy-link" style="padding:4px 8px; font-size:0.75rem;">
+            📋 Link
           </button>
         </div>
 
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div style="display:flex; align-items:center; gap:8px;">
           <div class="opponent-status-pill" id="opponent-status-display">
             <span>Opponent:</span>
             <strong id="opponent-name-display">Computer</strong>
             <span id="opponent-lines-display">(0/5)</span>
           </div>
-          <button class="btn btn-danger" id="btn-game-exit" style="padding:4px 10px; font-size:0.75rem;">
+          <button class="btn btn-danger" id="btn-game-exit" style="padding:4px 8px; font-size:0.75rem;">
             Exit
           </button>
         </div>
@@ -314,14 +318,14 @@
       <!-- Turn Banner -->
       <div class="turn-banner my-turn" id="turn-banner">
         <span id="turn-banner-icon">👉</span>
-        <span id="turn-banner-text">YOUR TURN! Pick any uncrossed number on your board.</span>
+        <span id="turn-banner-text">YOUR TURN! Pick any uncrossed number.</span>
       </div>
 
       <!-- Latest Call -->
       <div class="latest-call-bar" id="latest-call-container">
         <span>Latest Call:</span>
         <div class="latest-call-badge" id="latest-call-number">-</div>
-        <span id="latest-call-caller" style="font-size:0.85rem; color:var(--text-muted);">(Game started)</span>
+        <span id="latest-call-caller" style="font-size:0.82rem; color:var(--text-muted);">(Game started)</span>
       </div>
 
       <!-- 5x5 Grid -->
@@ -348,10 +352,10 @@
       <div class="leaderboard-container">
         <div class="leaderboard-header">
           <div>
-            <h2 style="font-size:1.8rem; font-weight:900;">🏆 Player Leaderboard</h2>
-            <p style="color:var(--text-muted); font-size:0.9rem;">Rankings based on total victories and win rate.</p>
+            <h2 style="font-size:1.6rem; font-weight:900;">🏆 Player Leaderboard</h2>
+            <p style="color:var(--text-muted); font-size:0.85rem;">Rankings based on total victories and win rate.</p>
           </div>
-          <button class="btn btn-primary" id="btn-leaderboard-play">
+          <button class="btn btn-primary" id="btn-leaderboard-play" style="font-size:0.85rem; padding:8px 14px;">
             🎮 Play & Rank Up
           </button>
         </div>
@@ -362,9 +366,9 @@
               <tr>
                 <th>Rank</th>
                 <th>Player</th>
-                <th>Rank Title</th>
+                <th class="col-hide-mobile">Rank Title</th>
                 <th>Wins</th>
-                <th>Losses</th>
+                <th class="col-hide-mobile">Losses</th>
                 <th>Win Rate</th>
                 <th>Streak</th>
               </tr>
@@ -384,8 +388,8 @@
       <div class="leaderboard-container">
         <div class="leaderboard-header">
           <div>
-            <h2 style="font-size:1.8rem; font-weight:900;">📜 Match History & Dates</h2>
-            <p style="color:var(--text-muted); font-size:0.9rem;">Every game you played with exact timestamps and outcomes.</p>
+            <h2 style="font-size:1.6rem; font-weight:900;">📜 Match History & Dates</h2>
+            <p style="color:var(--text-muted); font-size:0.85rem;">Every game you played with exact timestamps and outcomes.</p>
           </div>
         </div>
 
@@ -398,15 +402,37 @@
   </main>
 
   <!-- ======================================================================
+       MOBILE APP BOTTOM NAVIGATION BAR (Sticky, Native Feel)
+       ====================================================================== -->
+  <nav class="mobile-bottom-nav">
+    <button class="mobile-nav-btn active" data-nav="home">
+      <span class="mobile-nav-icon">🏠</span>
+      <span>Home</span>
+    </button>
+    <button class="mobile-nav-btn" data-nav="lobby">
+      <span class="mobile-nav-icon">🎮</span>
+      <span>Play</span>
+    </button>
+    <button class="mobile-nav-btn" data-nav="leaderboard">
+      <span class="mobile-nav-icon">🏆</span>
+      <span>Ranks</span>
+    </button>
+    <button class="mobile-nav-btn" data-nav="history">
+      <span class="mobile-nav-icon">📜</span>
+      <span>History</span>
+    </button>
+  </nav>
+
+  <!-- ======================================================================
        MODALS
        ====================================================================== -->
 
-  <!-- 1. WELCOME ENTRY GATE MODAL (Before Play: Guest vs Login vs Sign Up) -->
+  <!-- 1. WELCOME ENTRY GATE MODAL -->
   <div class="modal-overlay" id="modal-welcome-gate">
     <div class="modal-content entry-gate-card">
-      <div style="font-size:2.8rem; margin-bottom:6px;">🎲</div>
-      <h2 style="font-size:1.6rem; font-weight:900; margin-bottom:4px;">Welcome to BINGO Party!</h2>
-      <p style="color:var(--text-muted); font-size:0.88rem;">
+      <div style="font-size:2.8rem; margin-bottom:4px;">🎲</div>
+      <h2 style="font-size:1.5rem; font-weight:900; margin-bottom:4px;">Welcome to BINGO Party!</h2>
+      <p style="color:var(--text-muted); font-size:0.85rem;">
         Choose how you would like to play today:
       </p>
 
@@ -445,16 +471,16 @@
   <div class="modal-overlay" id="modal-guest-prompt">
     <div class="modal-content" style="text-align:center;">
       <button class="modal-close" data-close-modal>&times;</button>
-      <div style="font-size:2.5rem; margin-bottom:6px;">👤</div>
-      <h3 style="margin-bottom:6px;">Play as Guest</h3>
-      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:16px;">
-        Enter a nickname to show on the game board and in rooms:
+      <div style="font-size:2.4rem; margin-bottom:4px;">👤</div>
+      <h3 style="margin-bottom:4px;">Play as Guest</h3>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:14px;">
+        Enter a nickname to show on your card and in rooms:
       </p>
       <form id="form-guest-login">
         <div class="form-group">
           <input type="text" id="guest-nickname-input" class="input-text" placeholder="e.g. AcePlayer" maxlength="15" required autofocus>
         </div>
-        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:10px;">
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:8px;">
           🎮 Start Playing as Guest
         </button>
       </form>
@@ -467,11 +493,11 @@
       <button class="modal-close" data-close-modal>&times;</button>
       <div class="profile-card-modal-header">
         <div class="profile-large-avatar" id="modal-profile-avatar">👤</div>
-        <h3 id="modal-profile-name" style="font-size:1.4rem; font-weight:900;">Username</h3>
+        <h3 id="modal-profile-name" style="font-size:1.35rem; font-weight:900;">Username</h3>
         <span class="profile-account-type-badge badge-registered" id="modal-profile-badge">Registered Player</span>
       </div>
 
-      <div class="profile-stats-card" style="margin-bottom:20px;">
+      <div class="profile-stats-card" style="margin-bottom:16px;">
         <div class="profile-stat-box">
           <div class="profile-stat-val" id="profile-modal-wins">0</div>
           <div class="profile-stat-lbl">Wins</div>
@@ -486,12 +512,12 @@
         </div>
       </div>
 
-      <!-- Guest Upgrade Prompt (if guest) -->
-      <div id="guest-upgrade-banner" style="display:none; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:12px; margin-bottom:16px; text-align:center;">
-        <div style="font-size:0.85rem; color:#fcd34d; margin-bottom:8px;">
+      <!-- Guest Upgrade Prompt -->
+      <div id="guest-upgrade-banner" style="display:none; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:10px; margin-bottom:14px; text-align:center;">
+        <div style="font-size:0.82rem; color:#fcd34d; margin-bottom:6px;">
           💡 You are playing as Guest. Create a permanent account to save your rank on the leaderboard!
         </div>
-        <button class="btn btn-warning btn-block" id="btn-upgrade-guest" style="padding:8px;">
+        <button class="btn btn-warning btn-block" id="btn-upgrade-guest" style="padding:8px; font-size:0.85rem;">
           ✨ Upgrade to Permanent Account
         </button>
       </div>
@@ -502,7 +528,7 @@
       </button>
 
       <!-- Clear Cache 1-Click Reset Button -->
-      <button class="btn btn-secondary btn-block" id="btn-clear-cache" style="margin-top:12px; font-size:0.8rem; color:var(--text-muted);">
+      <button class="btn btn-secondary btn-block" id="btn-clear-cache" style="margin-top:10px; font-size:0.78rem; color:var(--text-muted); min-height:36px;">
         🧹 Clear App Cache & Hard Reload
       </button>
     </div>
@@ -527,7 +553,7 @@
           <label class="form-label" for="signin-pin">4-Digit PIN / Password</label>
           <input type="password" id="signin-pin" class="input-text" placeholder="1234" maxlength="8">
         </div>
-        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:12px;">
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:10px;">
           🔑 Sign In
         </button>
       </form>
@@ -553,7 +579,7 @@
             <button type="button" class="avatar-opt-btn" data-avatar="💎">💎</button>
           </div>
         </div>
-        <button type="submit" class="btn btn-success btn-block btn-lg" style="margin-top:12px;">
+        <button type="submit" class="btn btn-success btn-block btn-lg" style="margin-top:10px;">
           ✨ Create Account & Save Stats
         </button>
       </form>
@@ -564,11 +590,11 @@
   <div class="modal-overlay" id="modal-board-inspect">
     <div class="modal-content" style="text-align:center;">
       <button class="modal-close" data-close-modal>&times;</button>
-      <h3 style="margin-bottom:6px;">Historic Game Board</h3>
-      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:14px;" id="inspect-match-date">
+      <h3 style="margin-bottom:4px;">Historic Game Board</h3>
+      <p style="color:var(--text-muted); font-size:0.82rem; margin-bottom:12px;" id="inspect-match-date">
         Match played on ...
       </p>
-      <div class="paper-board-wrapper" style="max-width:380px;">
+      <div class="paper-board-wrapper" style="max-width:340px;">
         <div class="paper-grid" id="inspect-grid-element"></div>
       </div>
     </div>
@@ -578,20 +604,20 @@
   <div class="modal-overlay" id="modal-invite">
     <div class="modal-content" style="text-align:center;">
       <button class="modal-close" data-close-modal>&times;</button>
-      <h3 style="margin-bottom:6px;">Invite a Friend</h3>
-      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:14px;">
+      <h3 style="margin-bottom:4px;">Invite a Friend</h3>
+      <p style="color:var(--text-muted); font-size:0.82rem; margin-bottom:12px;">
         Share this code or scan with any mobile camera:
       </p>
-      <div id="modal-qr-container" style="display:flex; justify-content:center; margin:14px 0;"></div>
+      <div id="modal-qr-container" style="display:flex; justify-content:center; margin:12px 0;"></div>
       <div class="form-group">
         <label class="form-label">Room Code</label>
-        <div style="font-size:2rem; font-weight:900; letter-spacing:4px; color:var(--accent-gold);" id="modal-room-code-display">
+        <div style="font-size:1.8rem; font-weight:900; letter-spacing:4px; color:var(--accent-gold);" id="modal-room-code-display">
           ----
         </div>
       </div>
       <div class="form-group">
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="modal-invite-link-input" class="input-text" readonly style="font-size:0.85rem;">
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="modal-invite-link-input" class="input-text" readonly style="font-size:0.82rem;">
           <button class="btn btn-primary" id="btn-copy-modal-link">Copy</button>
         </div>
       </div>
@@ -604,9 +630,9 @@
       <button class="modal-close" data-close-modal>&times;</button>
       <div class="winner-banner">
         <div class="trophy-icon">🏆</div>
-        <h2 style="font-size:1.6rem; color:#f59e0b; font-family:var(--font-display); letter-spacing:2px;">B - I - N - G - O !</h2>
+        <h2 style="font-size:1.5rem; color:#f59e0b; font-family:var(--font-display); letter-spacing:2px;">B - I - N - G - O !</h2>
         <div class="winner-name" id="winner-name-display">You Won!</div>
-        <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:20px;" id="winner-sub-display">
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;" id="winner-sub-display">
           Completed all 5 lines first!
         </p>
         <button class="btn btn-primary btn-lg btn-block" id="btn-play-again">
@@ -620,10 +646,10 @@
   <div class="modal-overlay" id="modal-rules">
     <div class="modal-content">
       <button class="modal-close" data-close-modal>&times;</button>
-      <h3 style="margin-bottom:12px;">How to Play Classic 1-25 BINGO</h3>
-      <div style="font-size:0.9rem; line-height:1.6; color:#cbd5e1; display:flex; flex-direction:column; gap:10px;">
-        <p><strong>1. Fill Your Board:</strong> Fill your 5x5 grid with numbers 1 to 25. You can place them manually or hit <em>Auto-Fill / Shuffle</em>.</p>
-        <p><strong>2. Take Turns:</strong> On your turn, tap any uncrossed number on your grid to call it. That number is crossed out on <strong>BOTH</strong> players' grids!</p>
+      <h3 style="margin-bottom:10px;">How to Play Classic 1-25 BINGO</h3>
+      <div style="font-size:0.88rem; line-height:1.6; color:#cbd5e1; display:flex; flex-direction:column; gap:8px;">
+        <p><strong>1. Fill Your Board:</strong> Fill your 5x5 grid with numbers 1 to 25. You can place them manually or tap <em>Auto-Fill</em>.</p>
+        <p><strong>2. Take Turns:</strong> On your turn, tap any uncrossed number on your grid. That number is struck out on <strong>BOTH</strong> players' grids!</p>
         <p><strong>3. Complete Lines:</strong> A line is 5 crossed numbers in a horizontal row, vertical column, or diagonal line (12 possible lines).</p>
         <p><strong>4. Earn Letters:</strong>
           <br>• 1st Line = <strong>B</strong> is crossed out!
@@ -632,7 +658,7 @@
           <br>• 4th Line = <strong>G</strong> is crossed out!
           <br>• 5th Line = <strong>O</strong> is crossed out!
         </p>
-        <p><strong>5. BINGO Win:</strong> The first player to complete 5 lines gets all <strong>B - I - N - G - O</strong> letters and wins the game! Stats and dates are recorded in your profile.</p>
+        <p><strong>5. BINGO Win:</strong> The first player to complete 5 lines gets all <strong>B - I - N - G - O</strong> letters and wins the game!</p>
       </div>
     </div>
   </div>
@@ -653,7 +679,7 @@
     </div>
     <form class="chat-input-row" id="chat-form">
       <input type="text" id="chat-input" placeholder="Type a message..." maxlength="100">
-      <button type="submit" class="btn btn-primary" style="padding:6px 12px; font-size:0.85rem;">Send</button>
+      <button type="submit" class="btn btn-primary" style="padding:6px 10px; font-size:0.82rem;">Send</button>
     </form>
   </div>
 
@@ -661,13 +687,13 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Versioned Scripts for Clean Cache Busting -->
-  <script src="js/confetti.js?v=2.2.1"></script>
-  <script src="js/qrcode-lib.js?v=2.2.1"></script>
-  <script src="js/audio.js?v=2.2.1"></script>
-  <script src="js/bingo-logic.js?v=2.2.1"></script>
-  <script src="js/auth-storage.js?v=2.2.1"></script>
-  <script src="js/multiplayer.js?v=2.2.1"></script>
-  <script src="js/app.js?v=2.2.1"></script>
+  <script src="js/confetti.js?v=2.2.2"></script>
+  <script src="js/qrcode-lib.js?v=2.2.2"></script>
+  <script src="js/audio.js?v=2.2.2"></script>
+  <script src="js/bingo-logic.js?v=2.2.2"></script>
+  <script src="js/auth-storage.js?v=2.2.2"></script>
+  <script src="js/multiplayer.js?v=2.2.2"></script>
+  <script src="js/app.js?v=2.2.2"></script>
 
 </body>
 </html>

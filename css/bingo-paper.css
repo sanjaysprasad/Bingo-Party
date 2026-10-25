@@ -1,33 +1,35 @@
 /* ==========================================================================
-   Classic 1-25 Pen-and-Paper BINGO Styles
+   Classic 1-25 Pen-and-Paper BINGO Styles (Mobile-Optimized)
    ========================================================================== */
 
 /* The B - I - N - G - O Letter Score Track at the Top */
 .bingo-score-header {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin: 16px 0 20px;
+  gap: min(2.5vw, 10px);
+  margin: 10px 0 14px;
   user-select: none;
+  width: 100%;
 }
 
 .bingo-letter-box {
-  width: 58px;
-  height: 64px;
+  width: min(16vw, 54px);
+  height: min(17vw, 60px);
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display, "Impact", "Arial Black", sans-serif);
-  font-size: 2.2rem;
+  font-size: clamp(1.4rem, 6vw, 2.1rem);
   font-weight: 900;
   color: #94a3b8;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  transition: all 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
 }
 
 /* Individual letter branding */
@@ -37,33 +39,32 @@
 .letter-box-g { --letter-accent: #10b981; }
 .letter-box-o { --letter-accent: #8b5cf6; }
 
-/* Crossed Out Letter (When a line is completed!) */
+/* Crossed Out Letter */
 .bingo-letter-box.crossed {
   color: #ffffff;
   border-color: var(--letter-accent, #ef4444);
-  background: rgba(239, 68, 68, 0.15);
-  box-shadow: 0 0 20px var(--letter-accent, rgba(239, 68, 68, 0.5));
-  animation: letterStrikePop 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  background: rgba(239, 68, 68, 0.18);
+  box-shadow: 0 0 18px var(--letter-accent, rgba(239, 68, 68, 0.5));
+  animation: letterStrikePop 0.45s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
-/* Red Ink Slash Line through the Letter */
 .bingo-letter-box.crossed::after {
   content: '';
   position: absolute;
   top: 50%;
   left: -10%;
   width: 120%;
-  height: 5px;
+  height: 4px;
   background: linear-gradient(90deg, #ef4444, #f43f5e);
   transform: translateY(-50%) rotate(-35deg);
   box-shadow: 0 0 8px #ef4444;
   border-radius: 4px;
-  animation: slashDraw 0.25s ease-out forwards;
+  animation: slashDraw 0.2s ease-out forwards;
 }
 
 @keyframes letterStrikePop {
   0% { transform: scale(0.8) rotate(-10deg); }
-  50% { transform: scale(1.25) rotate(5deg); }
+  50% { transform: scale(1.22) rotate(4deg); }
   100% { transform: scale(1) rotate(0deg); }
 }
 
@@ -76,17 +77,17 @@
    TURN BANNER & ANNOUNCEMENTS
    ========================================================================== */
 .turn-banner {
-  padding: 12px 20px;
-  border-radius: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
   text-align: center;
   font-weight: 800;
-  font-size: 1.05rem;
-  margin-bottom: 16px;
+  font-size: clamp(0.85rem, 3.2vw, 1rem);
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  transition: all 0.3s ease;
+  gap: 8px;
+  transition: all 0.25s ease;
   user-select: none;
 }
 
@@ -94,7 +95,7 @@
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.3));
   border: 2px solid #10b981;
   color: #34d399;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
   animation: pulseTurn 1.8s infinite alternate ease-in-out;
 }
 
@@ -106,7 +107,7 @@
 
 @keyframes pulseTurn {
   from { transform: scale(1); }
-  to { transform: scale(1.02); box-shadow: 0 0 25px rgba(16, 185, 129, 0.6); }
+  to { transform: scale(1.015); box-shadow: 0 0 22px rgba(16, 185, 129, 0.55); }
 }
 
 /* Latest Number Called Callout */
@@ -114,13 +115,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 8px 16px;
+  padding: 6px 14px;
   border-radius: 30px;
-  margin-bottom: 16px;
-  font-size: 0.95rem;
+  margin-bottom: 12px;
+  font-size: 0.88rem;
   color: #cbd5e1;
 }
 
@@ -128,41 +129,50 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, #ef4444, #dc2626);
   color: #ffffff;
   font-weight: 900;
-  font-size: 1.15rem;
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+  font-size: 1.05rem;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
   animation: popBadge 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
 @keyframes popBadge {
   0% { transform: scale(0.4); }
-  70% { transform: scale(1.25); }
+  70% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
 
 /* ==========================================================================
-   5x5 BINGO PAPER GRID
+   5x5 BINGO PAPER GRID (MOBILE RESPONSIVE)
    ========================================================================== */
 .paper-board-wrapper {
   background: #141b24;
-  border: 3px solid #2d3748;
-  border-radius: 18px;
-  padding: 14px;
-  max-width: 480px;
+  border: 2px solid #2d3748;
+  border-radius: 14px;
+  padding: 8px;
+  width: 100%;
+  max-width: min(94vw, 440px);
   margin: 0 auto;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   position: relative;
+}
+
+@media (min-width: 480px) {
+  .paper-board-wrapper {
+    padding: 12px;
+    border-width: 3px;
+    border-radius: 18px;
+  }
 }
 
 .paper-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  gap: min(1.8vw, 7px);
   width: 100%;
 }
 
@@ -170,33 +180,34 @@
   aspect-ratio: 1 / 1;
   background: #1e2633;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1.1rem, 4vw, 1.7rem);
+  font-size: clamp(1.15rem, 5.5vw, 1.7rem);
   font-weight: 800;
   color: #f1f5f9;
   cursor: pointer;
   user-select: none;
   position: relative;
   overflow: hidden;
-  transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  transition: transform 0.12s ease, background-color 0.15s ease;
+  touch-action: manipulation;
+  min-height: 42px;
 }
 
 .paper-cell:hover:not(.crossed):not(.disabled) {
   background: #2b3545;
   border-color: #38bdf8;
-  transform: translateY(-2px);
 }
 
 .paper-cell:active:not(.disabled) {
-  transform: scale(0.94);
+  transform: scale(0.92);
 }
 
 .paper-cell.disabled {
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 /* Empty Cell in Setup Mode */
@@ -206,48 +217,41 @@
   color: rgba(255, 255, 255, 0.2);
 }
 
-.paper-cell.empty.active-slot {
-  border-color: #38bdf8;
-  background: rgba(56, 189, 248, 0.1);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
-}
-
-/* Crossed Out Cell (Struck Number) */
+/* Crossed Out Cell */
 .paper-cell.crossed {
-  background: #111720;
+  background: #10151d;
   color: #475569;
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.25);
 }
 
-/* Authentic Red Pen Slash / Cross Mark */
 .paper-cell.crossed::after {
   content: '';
   position: absolute;
   top: 50%;
-  left: 10%;
-  width: 80%;
-  height: 4px;
+  left: 12%;
+  width: 76%;
+  height: 3.5px;
   background: #ef4444;
   border-radius: 2px;
   transform: translateY(-50%) rotate(-45deg);
   box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
   pointer-events: none;
-  animation: slashDraw 0.2s ease-out forwards;
+  animation: slashDraw 0.18s ease-out forwards;
 }
 
 .paper-cell.crossed::before {
   content: '';
   position: absolute;
   top: 50%;
-  left: 10%;
-  width: 80%;
-  height: 4px;
+  left: 12%;
+  width: 76%;
+  height: 3.5px;
   background: #ef4444;
   border-radius: 2px;
   transform: translateY(-50%) rotate(45deg);
   box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
   pointer-events: none;
-  animation: slashDraw 0.2s ease-out forwards;
+  animation: slashDraw 0.18s ease-out forwards;
 }
 
 /* Part of a Completed Line */
@@ -256,33 +260,23 @@
   box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.3) !important;
 }
 
-/* Just Called Number Highlight */
-.paper-cell.just-called {
-  animation: justCalledGlow 1.2s ease-out;
-}
-
-@keyframes justCalledGlow {
-  0% { transform: scale(1.18); box-shadow: 0 0 25px #ef4444; }
-  100% { transform: scale(1); }
-}
-
 /* ==========================================================================
    SETUP PALETTE (Numbers 1-25)
    ========================================================================== */
 .setup-palette-card {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  padding: 16px;
-  margin-top: 16px;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 14px;
   text-align: center;
 }
 
 .setup-palette-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  margin: 12px 0;
+  gap: 5px;
+  margin: 10px 0;
 }
 
 .palette-btn {
@@ -292,19 +286,24 @@
   border-radius: 8px;
   color: #ffffff;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: clamp(0.85rem, 3.5vw, 1.05rem);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
+  min-height: 40px;
+  touch-action: manipulation;
 }
 
 .palette-btn:hover:not(:disabled) {
   background: #38bdf8;
   color: #0f172a;
-  transform: scale(1.08);
+}
+
+.palette-btn:active:not(:disabled) {
+  transform: scale(0.9);
 }
 
 .palette-btn:disabled {
-  opacity: 0.2;
+  opacity: 0.18;
   cursor: not-allowed;
   border-color: transparent;
 }
@@ -312,23 +311,27 @@
 /* Quick Action Buttons */
 .setup-actions-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-top: 12px;
+  flex-wrap: wrap;
 }
 
 .setup-actions-row .btn {
   flex: 1;
+  min-width: 100px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
 }
 
 /* Opponent Line Status Bar */
 .opponent-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
+  gap: 6px;
+  padding: 5px 10px;
   border-radius: 20px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
 }

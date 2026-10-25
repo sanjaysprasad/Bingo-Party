@@ -191,7 +191,8 @@ class BingoApp {
   // NAVIGATION & VIEW ROUTING
   // =========================================================================
   setupNavigation() {
-    this.dom.navButtons.forEach(btn => {
+    const allNavButtons = document.querySelectorAll('.nav-link-btn, .mobile-nav-btn');
+    allNavButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const targetView = btn.dataset.nav;
         this.switchView(targetView);
@@ -213,7 +214,7 @@ class BingoApp {
 
   switchView(viewName) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    this.dom.navButtons.forEach(btn => {
+    document.querySelectorAll('.nav-link-btn, .mobile-nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.nav === viewName);
     });
 
