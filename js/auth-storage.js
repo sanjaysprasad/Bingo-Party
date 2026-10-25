@@ -332,3 +332,113 @@ class BingoAuthStorage {
 }
 
 window.BingoAuthStorage = new BingoAuthStorage();
+
+// ============================================================================
+// DEVELOPER & ADMIN CONSOLE TOOLKIT
+// Open Developer Tools (F12 or Cmd+Option+I) and use `bingoAdmin`
+// ============================================================================
+window.bingoAdmin = {
+  // Wipe all user accounts, active games, and local storage data
+  wipeAllData: function() {
+    localStorage.clear();
+    sessionStorage.clear();
+    console.log('%c[BINGO ADMIN] 🧹 All user data, accounts, stats, and active games have been wiped!', 'color:#ef4444; font-weight:bold; font-size:14px;');
+    setTimeout(() => window.location.reload(), 1000);
+    return 'Wiping all data and reloading...';
+  },
+
+  // Wipe only registered user database and leaderboard
+  wipeAllUsers: function() {
+    localStorage.removeItem(window.BingoAuthStorage.STORAGE_KEY_USERS);
+    localStorage.removeItem(window.BingoAuthStorage.STORAGE_KEY_CURRENT);
+    localStorage.removeItem(window.BingoAuthStorage.STORAGE_KEY_GUEST);
+    localStorage.removeItem(window.BingoAuthStorage.STORAGE_KEY_ACTIVE_GAME);
+    console.log('%c[BINGO ADMIN] 🗑️ All user accounts deleted successfully.', 'color:#10b981; font-weight:bold;');
+    setTimeout(() => window.location.reload(), 800);
+    return 'Users wiped. Reloading...';
+  },
+
+  // View all registered users in a clean console table
+  listUsers: function() {
+    const users = window.BingoAuthStorage.getAllUsers();
+    const keys = Object.keys(users);
+    if (keys.length === 0) {
+      console.log('%c[BINGO ADMIN] No registered users found.', 'color:#f59e0b;');
+      return [];
+    }
+    const formatted = keys.map(k => {
+      const u = users[k];
+      return {
+        Username: u.username,
+        PIN: u.pin,
+        Avatar: u.avatar,
+        Wins: u.stats?.wins || 0,
+        Losses: u.stats?.losses || 0,
+        Streak: u.stats?.streak || 0,
+        MatchesPlayed: (u.history || []).length,
+        Created: u.createdAt || 'N/A'
+      };
+    });
+    console.table(formatted);
+    return users;
+  },
+
+  // Delete a specific user by username
+  deleteUser: function(username) {
+    if (!username) return 'Usage: bingoAdmin.deleteUser("username")';
+    const key = username.trim().toLowerCase();
+    const users = window.BingoAuthStorage.getAllUsers();
+    if (!users[key]) {
+      console.warn(`[BINGO ADMIN] User "${username}" not found.`);
+      return false;
+    }
+    delete users[key];
+    window.BingoAuthStorage.saveUsers(users);
+    if (window.BingoAuthStorage.currentUser && window.BingoAuthStorage.currentUser.username.toLowerCase() === key) {
+      window.BingoAuthStorage.signOut();
+    }
+    console.log(`%c[BINGO ADMIN] User "${username}" has been deleted.`, 'color:#10b981; font-weight:bold;');
+    return true;
+  },
+
+  // Reset a user's wins, losses, streak, and match history
+  resetStats: function(username) {
+    if (!username) return 'Usage: bingoAdmin.resetStats("username")';
+    const key = username.trim().toLowerCase();
+    const users = window.BingoAuthStorage.getAllUsers();
+    if (!users[key]) {
+      console.warn(`[BINGO ADMIN] User "${username}" not found.`);
+      return false;
+    }
+    users[key].stats = { wins: 0, losses: 0, streak: 0, totalLines: 0 };
+    users[key].history = [];
+    window.BingoAuthStorage.saveUsers(users);
+    console.log(`%c[BINGO ADMIN] Stats reset for "${username}".`, 'color:#10b981;');
+    return true;
+  },
+
+  // Export full JSON database for backup
+  exportDatabase: function() {
+    const data = {
+      users: window.BingoAuthStorage.getAllUsers(),
+      exportedAt: new Date().toISOString()
+    };
+    console.log(JSON.stringify(data, null, 2));
+    return data;
+  },
+
+  // Help command to see all available admin functions
+  help: function() {
+    console.log(
+      '%cBINGO DEVELOPER & ADMIN TOOLS:%c\n' +
+      '• bingoAdmin.listUsers()           - View all registered accounts in a table\n' +
+      '• bingoAdmin.wipeAllData()         - Wipe all data and hard reset app\n' +
+      '• bingoAdmin.wipeAllUsers()        - Wipe only user accounts & leaderboard\n' +
+      '• bingoAdmin.deleteUser("name")    - Delete a specific user account\n' +
+      '• bingoAdmin.resetStats("name")    - Reset wins/losses for a specific user\n' +
+      '• bingoAdmin.exportDatabase()      - Backup & inspect full database JSON\n',
+      'font-weight:bold; font-size:13px; color:#3b82f6;',
+      'color:#cbd5e1;'
+    );
+  }
+};
