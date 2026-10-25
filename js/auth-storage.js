@@ -4,27 +4,33 @@
  */
 class BingoAuthStorage {
   constructor() {
-    this.STORAGE_KEY_USERS = 'bingo_users_db_v2';
-    this.STORAGE_KEY_CURRENT = 'bingo_current_user_v2';
-    this.STORAGE_KEY_GUEST = 'bingo_guest_user_v2';
-    this.STORAGE_KEY_ACTIVE_GAME = 'bingo_active_saved_game_v2';
-    this.STORAGE_KEY_VER = 'bingo_app_version';
+    this.STORAGE_KEY_USERS = 'bingo_users_db_v3';
+    this.STORAGE_KEY_CURRENT = 'bingo_current_user_v3';
+    this.STORAGE_KEY_GUEST = 'bingo_guest_user_v3';
+    this.STORAGE_KEY_ACTIVE_GAME = 'bingo_active_saved_game_v3';
+    this.STORAGE_KEY_VER = 'bingo_app_version_v3';
 
     this.currentUser = null;
     this.purgeLegacyCaches();
     this.loadCurrentUser();
   }
 
-  // Automatically purges all legacy v1 cached demo accounts
+  // Automatically purges all legacy v1 & v2 cached user accounts and data (Global Wipe)
   purgeLegacyCaches() {
     try {
       const keys = [
+        // Legacy v1 keys
         'bingo_users_db_v1',
         'bingo_current_user_v1',
         'bingo_active_saved_game_v1',
         'bingo_shared_leaderboard_v1',
         'bingo_player_name',
-        'bingo_dauber_color'
+        'bingo_dauber_color',
+        // Legacy v2 keys (Global remote wipe)
+        'bingo_users_db_v2',
+        'bingo_current_user_v2',
+        'bingo_guest_user_v2',
+        'bingo_active_saved_game_v2'
       ];
       keys.forEach(k => localStorage.removeItem(k));
     } catch (e) {}
