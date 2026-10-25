@@ -34,8 +34,16 @@ class BingoAudio {
     return this.voiceEnabled;
   }
 
+  // Native Android Haptic Vibration
+  vibrate(pattern = 35) {
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate(pattern); } catch (e) {}
+    }
+  }
+
   // Realistic scratch / pen strike sound when crossing out a number
   playStrike() {
+    this.vibrate(35); // 35ms tactile haptic tap for Android
     if (this.isMuted) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
@@ -87,6 +95,7 @@ class BingoAudio {
 
   // Celebratory letter cross chime (when B, I, N, G, or O is crossed out!)
   playLetterCross(letterIndex = 0) {
+    this.vibrate([40, 50, 40]); // Double haptic pulse on Android
     if (this.isMuted) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
@@ -139,6 +148,7 @@ class BingoAudio {
 
   // Grand victory fanfare on BINGO win
   playBingoWin() {
+    this.vibrate([100, 60, 100, 60, 250]); // Celebratory fanfare vibration on Android
     if (this.isMuted) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;

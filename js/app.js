@@ -779,6 +779,14 @@ class BingoApp {
       this.startSetupPhase();
     });
 
+    // Android Hardware / Gesture Back Button handling
+    window.addEventListener('popstate', () => {
+      const activeModal = document.querySelector('.modal-overlay.active');
+      if (activeModal) {
+        activeModal.classList.remove('active');
+      }
+    });
+
     // Chat
     this.dom.chatHeaderToggle.addEventListener('click', () => {
       this.dom.chatDrawer.classList.toggle('open');
