@@ -1,0 +1,300 @@
+/* ==========================================================================
+   Bingo Card & Dauber Styles
+   ========================================================================== */
+
+.card-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* Card Wrapper with dynamic glow for "1 Away" or Win */
+.bingo-card-wrapper {
+  width: 100%;
+  background: #1e2633;
+  border: 3px solid #2d3748;
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.bingo-card-wrapper.near-bingo {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.bingo-card-wrapper.won-bingo {
+  border-color: #22c55e;
+  box-shadow: 0 0 35px rgba(34, 197, 94, 0.6);
+  animation: cardCelebration 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes cardCelebration {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.02); filter: brightness(1.08); }
+}
+
+/* 1-Away Alert Banner */
+.near-bingo-banner {
+  display: none;
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+  color: white;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  animation: pulseAlert 1.5s infinite;
+}
+
+.near-bingo-banner.visible {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+@keyframes pulseAlert {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* 5x5 Bingo Grid */
+.bingo-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+/* Column Header Letters: B - I - N - G - O */
+.bingo-header-cell {
+  aspect-ratio: 1 / 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  font-weight: 900;
+  font-family: var(--font-display);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+.header-b { background: linear-gradient(180deg, #3b82f6, #1d4ed8); }
+.header-i { background: linear-gradient(180deg, #ef4444, #b91c1c); }
+.header-n { background: linear-gradient(180deg, #f59e0b, #b45309); }
+.header-g { background: linear-gradient(180deg, #10b981, #047857); }
+.header-o { background: linear-gradient(180deg, #8b5cf6, #6d28d9); }
+
+/* Individual Grid Cells */
+.bingo-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+}
+
+.bingo-cell:hover {
+  background: #1f2937;
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.bingo-cell:active {
+  transform: scale(0.95);
+}
+
+.bingo-cell-value {
+  font-size: clamp(1rem, 3.5vw, 1.6rem);
+  font-weight: 800;
+  color: #f3f4f6;
+  text-align: center;
+  line-height: 1.1;
+  z-index: 2;
+  pointer-events: none;
+  word-break: break-word;
+}
+
+/* Custom word theme cells need smaller typography */
+.bingo-cell.word-mode .bingo-cell-value {
+  font-size: clamp(0.65rem, 2vw, 0.85rem);
+  font-weight: 700;
+  padding: 2px;
+}
+
+/* FREE Space Tile */
+.bingo-cell.free-space {
+  background: linear-gradient(135deg, #2e1065, #1e1b4b);
+  border-color: #8b5cf6;
+}
+
+.bingo-cell.free-space .bingo-cell-value {
+  font-size: clamp(0.75rem, 2.5vw, 1rem);
+  font-weight: 900;
+  color: var(--accent-gold);
+  text-shadow: 0 0 10px var(--accent-gold-glow);
+}
+
+/* Highlight when this number was called on caller board */
+.bingo-cell.called-match {
+  box-shadow: inset 0 0 0 2px var(--accent-gold);
+  animation: matchGlow 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes matchGlow {
+  from { box-shadow: inset 0 0 0 2px rgba(251, 191, 36, 0.4); }
+  to { box-shadow: inset 0 0 0 2px rgba(251, 191, 36, 1); }
+}
+
+/* ==========================================================================
+   DAUBER INK STAMPS
+   ========================================================================== */
+.bingo-cell.daubed::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  z-index: 1;
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  animation: daubStamp 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  pointer-events: none;
+}
+
+/* Dauber Stamp Colors */
+.dauber-red .bingo-cell.daubed::before {
+  background: radial-gradient(circle at 35% 35%, rgba(255, 99, 132, 0.9), rgba(220, 38, 38, 0.85));
+  border: 2px dashed rgba(254, 202, 202, 0.4);
+}
+
+.dauber-blue .bingo-cell.daubed::before {
+  background: radial-gradient(circle at 35% 35%, rgba(96, 165, 250, 0.9), rgba(37, 99, 235, 0.85));
+  border: 2px dashed rgba(191, 219, 254, 0.4);
+}
+
+.dauber-green .bingo-cell.daubed::before {
+  background: radial-gradient(circle at 35% 35%, rgba(52, 211, 153, 0.9), rgba(5, 150, 105, 0.85));
+  border: 2px dashed rgba(167, 243, 208, 0.4);
+}
+
+.dauber-purple .bingo-cell.daubed::before {
+  background: radial-gradient(circle at 35% 35%, rgba(192, 132, 252, 0.9), rgba(126, 34, 206, 0.85));
+  border: 2px dashed rgba(233, 213, 255, 0.4);
+}
+
+.dauber-gold .bingo-cell.daubed::before {
+  background: radial-gradient(circle at 35% 35%, rgba(253, 224, 71, 0.9), rgba(217, 119, 6, 0.85));
+  border: 2px dashed rgba(254, 240, 138, 0.4);
+}
+
+.dauber-pink .bingo-cell.daubed::before {
+  background: radial-gradient(circle at 35% 35%, rgba(244, 114, 182, 0.9), rgba(219, 39, 119, 0.85));
+  border: 2px dashed rgba(251, 207, 232, 0.4);
+}
+
+@keyframes daubStamp {
+  0% { transform: scale(1.6) rotate(-15deg); opacity: 0; }
+  100% { transform: scale(1) rotate(5deg); opacity: 0.85; }
+}
+
+/* Winning Pattern Tile Highlight */
+.bingo-cell.winning-tile {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.8) !important;
+  animation: winPulse 1s infinite alternate ease-in-out;
+}
+
+@keyframes winPulse {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.3); }
+}
+
+/* ==========================================================================
+   GIANT BINGO BUTTON
+   ========================================================================== */
+.bingo-btn-area {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.btn-bingo-claim {
+  width: 100%;
+  padding: 16px 24px;
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  border: none;
+  background: #374151;
+  color: #9ca3af;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn-bingo-claim:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Ready to claim state */
+.btn-bingo-claim.ready {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b, #ef4444);
+  color: #111827;
+  cursor: pointer;
+  opacity: 1;
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.7), 0 8px 20px rgba(0, 0, 0, 0.4);
+  animation: readyPulse 0.9s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes readyPulse {
+  0% { transform: scale(1); box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
+  100% { transform: scale(1.03); box-shadow: 0 0 35px rgba(239, 68, 68, 0.9); }
+}
+
+/* Card Control Options Bar (Auto-daub, voice, dauber selector) */
+.card-tools-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 14px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.toggle-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}

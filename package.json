@@ -1,0 +1,19 @@
+{
+  "name": "bingo-party",
+  "version": "1.0.0",
+  "description": "Realtime Multiplayer Bingo Web App with WebRTC and GitHub Pages deployment",
+  "scripts": {
+    "start": "npx serve . -l 3000",
+    "serve": "python3 -m http.server 3000"
+  },
+  "keywords": [
+    "bingo",
+    "multiplayer",
+    "webrtc",
+    "peerjs",
+    "github-pages",
+    "game"
+  ],
+  "author": "",
+  "license": "MIT"
+}
