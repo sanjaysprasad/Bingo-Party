@@ -515,7 +515,7 @@ main {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Chat Drawer Mobile Responsive */
+/* Chat Drawer Mobile Responsive (Hidden by default, only shown when room is active) */
 .chat-drawer {
   position: fixed;
   bottom: calc(64px + var(--safe-bottom));
@@ -526,7 +526,7 @@ main {
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   box-shadow: var(--shadow-lg);
   z-index: 800;
-  display: flex;
+  display: none;
   flex-direction: column;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   transform: translateY(calc(100% - 40px));
@@ -680,3 +680,180 @@ main {
   color: var(--accent-gold);
   margin-bottom: 4px;
 }
+
+/* ==========================================================================
+   MOBILE HEADER RESPONSIVENESS & QUICK SIGN OUT ACCESS
+   ========================================================================== */
+@media (max-width: 600px) {
+  .logo-text {
+    display: none !important;
+  }
+  .app-header {
+    padding: max(8px, var(--safe-top)) 10px 8px;
+    gap: 4px;
+  }
+  .user-account-btn {
+    max-width: 105px;
+    padding: 5px 8px;
+    font-size: 0.76rem;
+  }
+  .signout-header-btn {
+    padding: 5px 8px;
+    font-size: 0.74rem;
+  }
+}
+
+/* ==========================================================================
+   HOME VIEW USER PROFILE & SIGN OUT CARD
+   ========================================================================== */
+.user-home-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.user-home-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-home-avatar {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.user-home-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.user-home-name {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--text-main);
+}
+
+.user-home-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.user-home-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   MULTIPLAYER SETUP ROOM ROSTER & HOST START
+   ========================================================================== */
+.setup-roster-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-top: 14px;
+}
+
+.setup-roster-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.setup-roster-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setup-player-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+}
+
+.setup-player-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.badge-host {
+  font-size: 0.72rem;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.badge-ready {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.badge-setting {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+/* ==========================================================================
+   GAME MULTI-OPPONENT SCORE STATUS
+   ========================================================================== */
+.game-opponents-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.player-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.player-status-pill.active-turn {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+

@@ -22,7 +22,7 @@
   <!-- Automated Storage Cache Invalidator Script (Runs Before Render - Global Remote Wipe) -->
   <script>
     (function() {
-      var LATEST_VERSION = '3.0.0';
+      var LATEST_VERSION = '3.1.0';
       var currentVer = localStorage.getItem('bingo_cache_version');
       if (currentVer !== LATEST_VERSION) {
         var legacyKeys = [
@@ -44,9 +44,9 @@
   </script>
 
   <!-- Versioned Stylesheets for Instant Mobile Responsiveness -->
-  <link rel="stylesheet" href="css/style.css?v=3.0.0">
-  <link rel="stylesheet" href="css/bingo-paper.css?v=3.0.0">
-  <link rel="stylesheet" href="css/leaderboard.css?v=3.0.0">
+  <link rel="stylesheet" href="css/style.css?v=3.1.0">
+  <link rel="stylesheet" href="css/bingo-paper.css?v=3.1.0">
+  <link rel="stylesheet" href="css/leaderboard.css?v=3.1.0">
 
   <!-- MQTT over WebSockets CDN -->
   <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
@@ -106,6 +106,28 @@
          ====================================================================== -->
     <section id="view-home" class="view active">
       <div class="home-container">
+
+        <!-- Player Account & Quick Sign Out Banner -->
+        <div class="user-home-card" id="user-home-card">
+          <div class="user-home-info">
+            <span class="user-home-avatar" id="home-user-avatar">👤</span>
+            <div>
+              <div class="user-home-name-row">
+                <span class="user-home-name" id="home-user-name">Player</span>
+                <span class="profile-account-type-badge badge-registered" id="home-account-badge">Registered Player</span>
+              </div>
+              <div class="user-home-sub" id="home-user-sub">Ready to play classic 1-25 BINGO</div>
+            </div>
+          </div>
+          <div class="user-home-actions">
+            <button class="btn btn-secondary btn-sm" id="btn-home-profile" title="View Profile Stats">
+              👤 Profile
+            </button>
+            <button class="btn btn-danger btn-sm" id="btn-home-signout" title="Sign Out">
+              🚪 Sign Out
+            </button>
+          </div>
+        </div>
 
         <!-- Ongoing Game Resumption Card -->
         <div class="resume-game-banner" id="resume-game-card" style="display:none;">
@@ -273,7 +295,26 @@
         </div>
 
         <div id="setup-waiting-indicator" style="display:none; text-align:center; margin-top:12px; font-weight:600; color:#38bdf8; font-size:0.9rem;">
-          ⏳ Ready! Waiting for your opponent to finish...
+          ⏳ Ready! Waiting for other players to finish...
+        </div>
+
+        <!-- Live Room Players Roster (Shown in Multiplayer mode) -->
+        <div class="setup-roster-card" id="setup-roster-card" style="display:none;">
+          <div class="setup-roster-header">
+            <span>👥 Players in Room (<span id="setup-player-count">1</span>)</span>
+            <button class="btn btn-secondary btn-sm" id="btn-setup-invite" style="padding:4px 8px; font-size:0.75rem;">
+              🔗 Invite Link / QR
+            </button>
+          </div>
+          <div class="setup-roster-list" id="setup-roster-list">
+            <!-- Populated via JS with player pills and their ready status -->
+          </div>
+          <!-- Host Start Game Button (Enabled when >= 2 players and ready) -->
+          <div id="host-start-container" style="display:none; margin-top:12px;">
+            <button class="btn btn-success btn-block btn-lg" id="btn-host-start-game" disabled>
+              ▶️ Start Match (Waiting for players...)
+            </button>
+          </div>
         </div>
 
         <div class="setup-palette-card" id="setup-palette-container">
@@ -299,10 +340,12 @@
         </div>
 
         <div style="display:flex; align-items:center; gap:8px;">
-          <div class="opponent-status-pill" id="opponent-status-display">
-            <span>Opponent:</span>
-            <strong id="opponent-name-display">Computer</strong>
-            <span id="opponent-lines-display">(0/5)</span>
+          <div class="game-opponents-container" id="game-opponents-container">
+            <div class="opponent-status-pill" id="opponent-status-display">
+              <span>Opponent:</span>
+              <strong id="opponent-name-display">Computer</strong>
+              <span id="opponent-lines-display">(0/5)</span>
+            </div>
           </div>
           <button class="btn btn-danger" id="btn-game-exit" style="padding:4px 8px; font-size:0.75rem;">
             Exit
@@ -424,6 +467,10 @@
     <button class="mobile-nav-btn" data-nav="history">
       <span class="mobile-nav-icon">📜</span>
       <span>History</span>
+    </button>
+    <button class="mobile-nav-btn" id="btn-mobile-account" title="Account & Profile">
+      <span class="mobile-nav-icon">👤</span>
+      <span>Account</span>
     </button>
   </nav>
 
@@ -670,8 +717,8 @@
   <!-- Floating Reaction Container -->
   <div class="reaction-container" id="reaction-container"></div>
 
-  <!-- Live In-Game Chat Drawer -->
-  <div class="chat-drawer" id="chat-drawer">
+  <!-- Live In-Game Chat Drawer (Only shown when multiplayer room is active) -->
+  <div class="chat-drawer" id="chat-drawer" style="display:none;">
     <div class="chat-header" id="chat-header-toggle">
       <span>💬 Live Chat</span>
       <span id="chat-toggle-icon">▲</span>
@@ -691,13 +738,13 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Versioned Scripts for Clean Cache Busting -->
-  <script src="js/confetti.js?v=3.0.0"></script>
-  <script src="js/qrcode-lib.js?v=3.0.0"></script>
-  <script src="js/audio.js?v=3.0.0"></script>
-  <script src="js/bingo-logic.js?v=3.0.0"></script>
-  <script src="js/auth-storage.js?v=3.0.0"></script>
-  <script src="js/multiplayer.js?v=3.0.0"></script>
-  <script src="js/app.js?v=3.0.0"></script>
+  <script src="js/confetti.js?v=3.1.0"></script>
+  <script src="js/qrcode-lib.js?v=3.1.0"></script>
+  <script src="js/audio.js?v=3.1.0"></script>
+  <script src="js/bingo-logic.js?v=3.1.0"></script>
+  <script src="js/auth-storage.js?v=3.1.0"></script>
+  <script src="js/multiplayer.js?v=3.1.0"></script>
+  <script src="js/app.js?v=3.1.0"></script>
 
 </body>
 </html>

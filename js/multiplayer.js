@@ -14,6 +14,7 @@ class BingoMultiplayer {
     this.mqttClient = null;
     this.isConnected = false;
     this.status = 'disconnected'; // 'disconnected' | 'connecting' | 'connected'
+    this.processedMsgIds = new Set();
   }
 
   on(type, callback) {
@@ -42,6 +43,7 @@ class BingoMultiplayer {
     this.roomCode = (roomCode || '').toUpperCase().trim();
     this.playerName = playerName || 'Player';
     this.isHost = isHost;
+    this.processedMsgIds.clear();
 
     this.setStatus('connecting', `Connecting to Room ${this.roomCode}...`);
 
@@ -52,6 +54,14 @@ class BingoMultiplayer {
       this.broadcastChannel.onmessage = (event) => {
         const msg = event.data;
         if (!msg || msg.senderId === this.playerId) return; // ignore self
+        if (msg.msgId && this.processedMsgIds.has(msg.msgId)) return; // ignore duplicate
+        if (msg.msgId) {
+          this.processedMsgIds.add(msg.msgId);
+          if (this.processedMsgIds.size > 200) {
+            const first = this.processedMsgIds.values().next().value;
+            this.processedMsgIds.delete(first);
+          }
+        }
         this.emit(msg.type, msg.payload);
       };
     } catch (e) {
@@ -68,7 +78,7 @@ class BingoMultiplayer {
         name: this.playerName,
         isHost: this.isHost
       });
-    }, 500);
+    }, 400);
 
     return { roomCode: this.roomCode, playerId: this.playerId };
   }
@@ -109,6 +119,14 @@ class BingoMultiplayer {
         try {
           const msg = JSON.parse(message.toString());
           if (!msg || msg.senderId === this.playerId) return; // ignore self
+          if (msg.msgId && this.processedMsgIds.has(msg.msgId)) return; // ignore duplicate
+          if (msg.msgId) {
+            this.processedMsgIds.add(msg.msgId);
+            if (this.processedMsgIds.size > 200) {
+              const first = this.processedMsgIds.values().next().value;
+              this.processedMsgIds.delete(first);
+            }
+          }
           this.emit(msg.type, msg.payload);
         } catch (e) {
           console.error('Failed to parse MQTT message:', e);
@@ -131,7 +149,15 @@ class BingoMultiplayer {
 
   // Send a message to all players in the room
   send(type, payload = {}) {
+    const msgId = `${this.playerId}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    this.processedMsgIds.add(msgId);
+    if (this.processedMsgIds.size > 200) {
+      const first = this.processedMsgIds.values().next().value;
+      this.processedMsgIds.delete(first);
+    }
+
     const packet = {
+      msgId: msgId,
       type: type,
       payload: payload,
       senderId: this.playerId,

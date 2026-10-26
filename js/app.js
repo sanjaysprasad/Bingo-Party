@@ -5,6 +5,7 @@
  */
 class BingoApp {
   constructor() {
+    this.currentView = 'home';
     this.state = {
       mode: 'bot',              // 'bot' | 'multiplayer'
       roomCode: '',
@@ -21,7 +22,13 @@ class BingoApp {
       isGameOver: false,
       isOpponentReady: false,
       amIReady: false,
-      turnCount: 0
+      turnCount: 0,
+
+      // Multiplayer Room & Turn Sequencing State
+      roomPlayers: new Map(),   // playerId -> { id, name, isHost, isReady, linesCount }
+      playerOrder: [],          // array of playerIds [id1, id2, id3, ...] in turn order
+      currentTurnPlayerId: null,// playerId whose turn it is
+      turnIndex: 0              // index in playerOrder
     };
 
     this.initDOM();
@@ -56,6 +63,14 @@ class BingoApp {
       btnHeaderRules: document.getElementById('btn-header-rules'),
 
       // Home Page
+      userHomeCard: document.getElementById('user-home-card'),
+      homeUserAvatar: document.getElementById('home-user-avatar'),
+      homeUserName: document.getElementById('home-user-name'),
+      homeAccountBadge: document.getElementById('home-account-badge'),
+      btnHomeProfile: document.getElementById('btn-home-profile'),
+      btnHomeSignout: document.getElementById('btn-home-signout'),
+      btnMobileAccount: document.getElementById('btn-mobile-account'),
+
       resumeGameCard: document.getElementById('resume-game-card'),
       resumeGameDesc: document.getElementById('resume-game-desc'),
       btnResumeGame: document.getElementById('btn-resume-game'),
@@ -83,10 +98,17 @@ class BingoApp {
       btnSetupReady: document.getElementById('btn-setup-ready'),
       setupWaitingIndicator: document.getElementById('setup-waiting-indicator'),
       setupPaletteContainer: document.getElementById('setup-palette-container'),
+      setupRosterCard: document.getElementById('setup-roster-card'),
+      setupPlayerCount: document.getElementById('setup-player-count'),
+      setupRosterList: document.getElementById('setup-roster-list'),
+      btnSetupInvite: document.getElementById('btn-setup-invite'),
+      hostStartContainer: document.getElementById('host-start-container'),
+      btnHostStartGame: document.getElementById('btn-host-start-game'),
 
       // Game
       gameRoomTag: document.getElementById('game-room-tag'),
       btnGameCopyLink: document.getElementById('btn-game-copy-link'),
+      gameOpponentsContainer: document.getElementById('game-opponents-container'),
       opponentNameDisplay: document.getElementById('opponent-name-display'),
       opponentLinesDisplay: document.getElementById('opponent-lines-display'),
       btnGameExit: document.getElementById('btn-game-exit'),
@@ -191,13 +213,23 @@ class BingoApp {
   // NAVIGATION & VIEW ROUTING
   // =========================================================================
   setupNavigation() {
-    const allNavButtons = document.querySelectorAll('.nav-link-btn, .mobile-nav-btn');
+    const allNavButtons = document.querySelectorAll('.nav-link-btn, .mobile-nav-btn[data-nav]');
     allNavButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const targetView = btn.dataset.nav;
-        this.switchView(targetView);
+        if (targetView) this.switchView(targetView);
       });
     });
+
+    if (this.dom.btnMobileAccount) {
+      this.dom.btnMobileAccount.addEventListener('click', () => {
+        if (window.BingoAuthStorage.hasSession()) {
+          this.openProfileModal();
+        } else {
+          this.openWelcomeGate();
+        }
+      });
+    }
 
     this.dom.btnHeaderLogo.addEventListener('click', () => {
       this.switchView('home');
@@ -213,8 +245,9 @@ class BingoApp {
   }
 
   switchView(viewName) {
+    this.currentView = viewName;
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.nav-link-btn, .mobile-nav-btn').forEach(btn => {
+    document.querySelectorAll('.nav-link-btn, .mobile-nav-btn[data-nav]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.nav === viewName);
     });
 
@@ -240,6 +273,18 @@ class BingoApp {
       this.dom.viewHistory.classList.add('active');
       this.dom.btnHeaderInvite.style.display = 'none';
       this.renderHistoryView();
+    }
+
+    this.updateChatVisibility();
+  }
+
+  updateChatVisibility() {
+    const isMultiplayerActive = (this.state.mode === 'multiplayer' && (this.currentView === 'setup' || this.currentView === 'game'));
+    if (this.dom.chatDrawer) {
+      this.dom.chatDrawer.style.display = isMultiplayerActive ? 'flex' : 'none';
+      if (!isMultiplayerActive) {
+        this.dom.chatDrawer.classList.remove('open');
+      }
     }
   }
 
@@ -302,6 +347,23 @@ class BingoApp {
     this.dom.btnHeaderSignout.addEventListener('click', () => {
       this.handleSignOut();
     });
+
+    // 4b. Home User Card Buttons
+    if (this.dom.btnHomeSignout) {
+      this.dom.btnHomeSignout.addEventListener('click', () => {
+        this.handleSignOut();
+      });
+    }
+
+    if (this.dom.btnHomeProfile) {
+      this.dom.btnHomeProfile.addEventListener('click', () => {
+        if (window.BingoAuthStorage.hasSession()) {
+          this.openProfileModal();
+        } else {
+          this.openWelcomeGate();
+        }
+      });
+    }
 
     // 5. Modal Sign Out Button
     this.dom.btnModalSignout.addEventListener('click', () => {
@@ -435,6 +497,14 @@ class BingoApp {
       this.dom.headerUserStreak.style.display = 'none';
       this.dom.btnHeaderSignout.style.display = 'none';
 
+      if (this.dom.homeUserAvatar) this.dom.homeUserAvatar.textContent = '👤';
+      if (this.dom.homeUserName) this.dom.homeUserName.textContent = 'Not Signed In';
+      if (this.dom.homeAccountBadge) {
+        this.dom.homeAccountBadge.textContent = 'No Account';
+        this.dom.homeAccountBadge.className = 'profile-account-type-badge';
+      }
+      if (this.dom.btnHomeSignout) this.dom.btnHomeSignout.style.display = 'none';
+
       // Zero out stats on home page
       this.dom.homeStatWins.textContent = '0';
       this.dom.homeStatLosses.textContent = '0';
@@ -447,6 +517,19 @@ class BingoApp {
     this.dom.headerUserAvatar.textContent = user.avatar || '👤';
     this.dom.headerUserName.textContent = user.username + (user.isGuest ? ' (Guest)' : '');
     this.dom.btnHeaderSignout.style.display = 'inline-flex';
+
+    if (this.dom.homeUserAvatar) this.dom.homeUserAvatar.textContent = user.avatar || '👤';
+    if (this.dom.homeUserName) this.dom.homeUserName.textContent = user.username;
+    if (this.dom.homeAccountBadge) {
+      if (user.isGuest) {
+        this.dom.homeAccountBadge.textContent = 'Guest Player';
+        this.dom.homeAccountBadge.className = 'profile-account-type-badge badge-guest';
+      } else {
+        this.dom.homeAccountBadge.textContent = 'Registered Player';
+        this.dom.homeAccountBadge.className = 'profile-account-type-badge badge-registered';
+      }
+    }
+    if (this.dom.btnHomeSignout) this.dom.btnHomeSignout.style.display = 'inline-flex';
 
     const streak = user.stats?.streak || 0;
     if (streak > 0) {
@@ -689,8 +772,19 @@ class BingoApp {
       this.state.roomCode = code;
       this.state.isHost = true;
       this.state.opponentName = 'Waiting...';
+      this.state.roomPlayers.clear();
 
-      window.BingoMultiplayer.joinRoom(code, window.BingoAuthStorage.currentUser.username, true);
+      const myId = window.BingoMultiplayer.playerId;
+      const myName = window.BingoAuthStorage.currentUser.username;
+      this.state.roomPlayers.set(myId, {
+        id: myId,
+        name: myName,
+        isHost: true,
+        isReady: false,
+        linesCount: 0
+      });
+
+      window.BingoMultiplayer.joinRoom(code, myName, true);
       this.startSetupPhase();
       this.openInviteModal();
     });
@@ -707,12 +801,35 @@ class BingoApp {
       this.state.roomCode = code;
       this.state.isHost = false;
       this.state.opponentName = 'Host';
+      this.state.roomPlayers.clear();
 
-      window.BingoMultiplayer.joinRoom(code, window.BingoAuthStorage.currentUser.username, false);
+      const myId = window.BingoMultiplayer.playerId;
+      const myName = window.BingoAuthStorage.currentUser.username;
+      this.state.roomPlayers.set(myId, {
+        id: myId,
+        name: myName,
+        isHost: false,
+        isReady: false,
+        linesCount: 0
+      });
+
+      window.BingoMultiplayer.joinRoom(code, myName, false);
       this.startSetupPhase();
     });
 
     // Setup Board Actions
+    if (this.dom.btnHostStartGame) {
+      this.dom.btnHostStartGame.addEventListener('click', () => {
+        this.hostStartGame();
+      });
+    }
+
+    if (this.dom.btnSetupInvite) {
+      this.dom.btnSetupInvite.addEventListener('click', () => {
+        this.openInviteModal();
+      });
+    }
+
     this.dom.btnSetupShuffle.addEventListener('click', () => {
       window.bingoAudio.playPop();
       const randomBoard = window.BingoLogic.generateRandomBoard();
@@ -814,6 +931,9 @@ class BingoApp {
     this.state.mode = 'bot';
     this.state.opponentName = 'Smart Bot';
     this.state.isHost = true;
+    this.state.roomPlayers.clear();
+    if (this.dom.setupRosterCard) this.dom.setupRosterCard.style.display = 'none';
+    if (this.dom.hostStartContainer) this.dom.hostStartContainer.style.display = 'none';
     this.startSetupPhase();
   }
 
@@ -831,9 +951,133 @@ class BingoApp {
     this.state.setupRemaining.clear();
     this.dom.btnSetupReady.disabled = false;
 
+    // Reset self ready state in roster
+    const myId = window.BingoMultiplayer.playerId;
+    if (this.state.roomPlayers.has(myId)) {
+      this.state.roomPlayers.get(myId).isReady = false;
+    }
+
+    if (this.state.mode === 'multiplayer') {
+      if (this.dom.setupRosterCard) this.dom.setupRosterCard.style.display = 'block';
+      if (this.dom.hostStartContainer) {
+        this.dom.hostStartContainer.style.display = this.state.isHost ? 'block' : 'none';
+      }
+      this.renderRoomRoster();
+      this.checkHostStartEligibility();
+    } else {
+      if (this.dom.setupRosterCard) this.dom.setupRosterCard.style.display = 'none';
+      if (this.dom.hostStartContainer) this.dom.hostStartContainer.style.display = 'none';
+    }
+
     this.renderSetupGrid();
     this.renderSetupPalette();
     this.switchView('setup');
+    this.updateChatVisibility();
+  }
+
+  renderRoomRoster() {
+    if (!this.dom.setupRosterCard) return;
+    const count = this.state.roomPlayers.size;
+    if (this.dom.setupPlayerCount) {
+      this.dom.setupPlayerCount.textContent = count;
+    }
+
+    if (!this.dom.setupRosterList) return;
+    this.dom.setupRosterList.innerHTML = '';
+
+    const myId = window.BingoMultiplayer.playerId;
+
+    this.state.roomPlayers.forEach(player => {
+      const isMe = (player.id === myId);
+      const item = document.createElement('div');
+      item.className = 'setup-player-item';
+
+      const info = document.createElement('div');
+      info.className = 'setup-player-info';
+      info.innerHTML = `
+        <span>${isMe ? '👉 ' : ''}${player.name} ${isMe ? '(You)' : ''}</span>
+        ${player.isHost ? '<span class="badge-host">👑 Host</span>' : ''}
+      `;
+
+      const statusBadge = document.createElement('span');
+      if (player.isReady) {
+        statusBadge.className = 'badge-ready';
+        statusBadge.textContent = '✅ Ready';
+      } else {
+        statusBadge.className = 'badge-setting';
+        statusBadge.textContent = '⏳ Setting grid...';
+      }
+
+      item.appendChild(info);
+      item.appendChild(statusBadge);
+      this.dom.setupRosterList.appendChild(item);
+    });
+
+    this.checkHostStartEligibility();
+  }
+
+  checkHostStartEligibility() {
+    if (!this.state.isHost || !this.dom.btnHostStartGame) return;
+
+    const total = this.state.roomPlayers.size;
+    const readyCount = Array.from(this.state.roomPlayers.values()).filter(p => p.isReady).length;
+
+    if (total < 2) {
+      this.dom.btnHostStartGame.disabled = true;
+      this.dom.btnHostStartGame.textContent = '⏳ Waiting for friends to join... (1/2 min)';
+      this.dom.btnHostStartGame.className = 'btn btn-secondary btn-block btn-lg';
+    } else if (readyCount < total) {
+      this.dom.btnHostStartGame.disabled = true;
+      this.dom.btnHostStartGame.textContent = `⏳ Waiting for all to be ready (${readyCount}/${total})`;
+      this.dom.btnHostStartGame.className = 'btn btn-secondary btn-block btn-lg';
+    } else {
+      this.dom.btnHostStartGame.disabled = false;
+      this.dom.btnHostStartGame.textContent = `🔥 Start Match Now! (${readyCount}/${total} Ready)`;
+      this.dom.btnHostStartGame.className = 'btn btn-success btn-block btn-lg';
+    }
+  }
+
+  hostStartGame() {
+    if (!this.state.isHost) return;
+    const total = this.state.roomPlayers.size;
+    if (total < 2) {
+      alert('Need at least 2 players to start! Invite a friend to join.');
+      return;
+    }
+
+    const myId = window.BingoMultiplayer.playerId;
+    const otherIds = Array.from(this.state.roomPlayers.keys()).filter(id => id !== myId);
+    // Player order: Host starts first, followed by other players in order
+    const playerOrder = [myId, ...otherIds];
+
+    const payload = {
+      playerOrder: playerOrder,
+      players: Array.from(this.state.roomPlayers.values()),
+      currentTurnPlayerId: playerOrder[0],
+      turnIndex: 0
+    };
+
+    window.BingoMultiplayer.send('GAME_START', payload);
+    this.handleGameStarted(payload);
+  }
+
+  handleGameStarted(data) {
+    this.state.playerOrder = data.playerOrder || [];
+    this.state.currentTurnPlayerId = data.currentTurnPlayerId || (this.state.playerOrder[0] || null);
+    this.state.turnIndex = data.turnIndex || 0;
+
+    if (data.players && Array.isArray(data.players)) {
+      data.players.forEach(p => {
+        if (!this.state.roomPlayers.has(p.id)) {
+          this.state.roomPlayers.set(p.id, p);
+        }
+      });
+    }
+
+    const myId = window.BingoMultiplayer.playerId;
+    const isMyTurn = (this.state.currentTurnPlayerId === myId);
+
+    this.startActiveGame(isMyTurn);
   }
 
   renderSetupGrid() {
@@ -891,28 +1135,32 @@ class BingoApp {
     this.state.gameBoard = [...this.state.setupBoard];
     this.dom.btnSetupReady.disabled = true;
 
+    const myId = window.BingoMultiplayer.playerId;
+    const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
+
+    if (this.state.roomPlayers.has(myId)) {
+      this.state.roomPlayers.get(myId).isReady = true;
+    }
+
     if (this.state.mode === 'bot') {
       this.state.botBoard = window.BingoLogic.generateRandomBoard();
       this.state.isOpponentReady = true;
       this.startActiveGame(true);
     } else {
       this.dom.setupWaitingIndicator.style.display = 'block';
+      this.dom.setupWaitingIndicator.textContent = this.state.isHost
+        ? '✅ You are ready! Click Start Match below when players are ready.'
+        : '✅ You are ready! Waiting for host to start match...';
       this.dom.setupPaletteContainer.style.display = 'none';
 
-      const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
       window.BingoMultiplayer.send('PLAYER_READY', {
-        playerName: myName
+        id: myId,
+        name: myName,
+        isReady: true
       });
 
-      if (this.state.isOpponentReady) {
-        if (this.state.isHost) {
-          const startingTurn = Math.random() > 0.5 ? 'host' : 'guest';
-          window.BingoMultiplayer.send('GAME_START', { startingTurn });
-          this.startActiveGame(startingTurn === 'host');
-        }
-      } else {
-        this.showToast('You are ready! Waiting for your opponent...', 4000);
-      }
+      this.renderRoomRoster();
+      this.checkHostStartEligibility();
     }
   }
 
@@ -926,8 +1174,8 @@ class BingoApp {
 
     this.dom.letters.forEach(el => el.classList.remove('crossed'));
     this.dom.gameRoomTag.textContent = this.state.mode === 'bot' ? 'Solo vs Bot' : `Room: ${this.state.roomCode}`;
-    this.dom.opponentNameDisplay.textContent = this.state.opponentName;
-    this.dom.opponentLinesDisplay.textContent = '(0/5)';
+
+    this.updateOpponentStatusDisplays();
 
     this.dom.latestCallNumber.textContent = '-';
     this.dom.latestCallCaller.textContent = 'Game started!';
@@ -935,6 +1183,7 @@ class BingoApp {
     this.updateTurnBanner();
     this.renderGameBoard();
     this.switchView('game');
+    this.updateChatVisibility();
     this.saveCurrentGame();
 
     if (isMyTurn) {
@@ -944,15 +1193,54 @@ class BingoApp {
     }
   }
 
+  updateOpponentStatusDisplays() {
+    if (!this.dom.gameOpponentsContainer) return;
+
+    if (this.state.mode === 'bot') {
+      this.dom.gameOpponentsContainer.innerHTML = `
+        <div class="opponent-status-pill" id="opponent-status-display">
+          <span>Opponent:</span>
+          <strong id="opponent-name-display">${this.state.opponentName || 'Computer'}</strong>
+          <span id="opponent-lines-display">(${this.state.opponentLinesCount || 0}/5)</span>
+        </div>
+      `;
+      return;
+    }
+
+    // Multiplayer: Render all opponents in the room with their line counts
+    const myId = window.BingoMultiplayer.playerId;
+    this.dom.gameOpponentsContainer.innerHTML = '';
+
+    this.state.roomPlayers.forEach(p => {
+      if (p.id === myId) return;
+
+      const isCurrentTurn = (p.id === this.state.currentTurnPlayerId);
+      const pill = document.createElement('div');
+      pill.className = 'player-status-pill' + (isCurrentTurn ? ' active-turn' : '');
+      pill.innerHTML = `
+        <span>${isCurrentTurn ? '👉 ' : ''}${p.name}:</span>
+        <span style="color:#f59e0b; font-weight:700;">(${p.linesCount || 0}/5)</span>
+      `;
+      this.dom.gameOpponentsContainer.appendChild(pill);
+    });
+  }
+
   updateTurnBanner() {
     if (this.state.isMyTurn) {
       this.dom.turnBanner.className = 'turn-banner my-turn';
       this.dom.turnBannerIcon.textContent = '👉';
       this.dom.turnBannerText.textContent = 'YOUR TURN! Pick any uncrossed number on your board.';
     } else {
+      let waitingName = 'Opponent';
+      if (this.state.mode === 'bot') {
+        waitingName = this.state.opponentName || 'Computer';
+      } else if (this.state.currentTurnPlayerId) {
+        const nextP = this.state.roomPlayers.get(this.state.currentTurnPlayerId);
+        waitingName = nextP ? nextP.name : 'other player';
+      }
       this.dom.turnBanner.className = 'turn-banner opponent-turn';
       this.dom.turnBannerIcon.textContent = '⏳';
-      this.dom.turnBannerText.textContent = `Waiting for ${this.state.opponentName} to pick...`;
+      this.dom.turnBannerText.textContent = `Waiting for ${waitingName} to pick...`;
     }
   }
 
@@ -990,6 +1278,7 @@ class BingoApp {
     if (!this.state.isMyTurn || this.state.isGameOver) return;
     if (this.state.calledNumbers.has(num)) return;
 
+    const myId = window.BingoMultiplayer.playerId;
     const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
 
     this.state.calledNumbers.add(num);
@@ -999,10 +1288,24 @@ class BingoApp {
     this.dom.latestCallNumber.textContent = num;
     this.dom.latestCallCaller.textContent = 'Called by You';
 
-    if (this.state.mode === 'multiplayer') {
+    // Calculate next turn for multiplayer round-robin
+    let nextTurnIndex = 0;
+    let nextTurnPlayerId = null;
+    let nextTurnPlayerName = '';
+
+    if (this.state.mode === 'multiplayer' && this.state.playerOrder.length > 0) {
+      nextTurnIndex = (this.state.turnIndex + 1) % this.state.playerOrder.length;
+      nextTurnPlayerId = this.state.playerOrder[nextTurnIndex];
+      const nextP = this.state.roomPlayers.get(nextTurnPlayerId);
+      nextTurnPlayerName = nextP ? nextP.name : 'Next Player';
+
       window.BingoMultiplayer.send('NUMBER_CALLED', {
         number: num,
-        callerName: myName
+        callerId: myId,
+        callerName: myName,
+        turnIndex: nextTurnIndex,
+        nextTurnPlayerId: nextTurnPlayerId,
+        nextTurnPlayerName: nextTurnPlayerName
       });
     }
 
@@ -1010,16 +1313,30 @@ class BingoApp {
     this.renderGameBoard();
     this.saveCurrentGame();
 
+    if (this.state.mode === 'multiplayer') {
+      window.BingoMultiplayer.send('LINES_UPDATE', {
+        playerId: myId,
+        playerName: myName,
+        lineCount: evaluation.lineCount
+      });
+    }
+
     if (evaluation.isBingo) {
       this.handleGameOver(myName, true);
       return;
     }
 
-    this.state.isMyTurn = false;
-    this.updateTurnBanner();
-    this.renderGameBoard();
-
-    if (this.state.mode === 'bot') {
+    if (this.state.mode === 'multiplayer') {
+      this.state.turnIndex = nextTurnIndex;
+      this.state.currentTurnPlayerId = nextTurnPlayerId;
+      this.state.isMyTurn = false;
+      this.updateTurnBanner();
+      this.updateOpponentStatusDisplays();
+      this.renderGameBoard();
+    } else if (this.state.mode === 'bot') {
+      this.state.isMyTurn = false;
+      this.updateTurnBanner();
+      this.renderGameBoard();
       this.scheduleBotMove();
     }
   }
@@ -1129,44 +1446,98 @@ class BingoApp {
   // =========================================================================
   setupMultiplayerListeners() {
     window.BingoMultiplayer.on('PLAYER_JOINED', (data) => {
-      if (data.id !== window.BingoMultiplayer.playerId) {
-        this.state.opponentName = data.name || 'Friend';
-        this.dom.opponentNameDisplay.textContent = this.state.opponentName;
-        this.showToast(`👋 ${data.name} joined the room!`, 3000);
-        window.bingoAudio.playPop();
+      if (data.id === window.BingoMultiplayer.playerId) return;
 
-        const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
-        window.BingoMultiplayer.send('PLAYER_ANNOUNCE', {
-          name: myName
+      this.state.roomPlayers.set(data.id, {
+        id: data.id,
+        name: data.name || 'Friend',
+        isHost: !!data.isHost,
+        isReady: !!data.isReady,
+        linesCount: 0
+      });
+
+      this.renderRoomRoster();
+      this.updateOpponentStatusDisplays();
+      this.showToast(`👋 ${data.name || 'Friend'} joined the room!`, 3000);
+      window.bingoAudio.playPop();
+
+      const myId = window.BingoMultiplayer.playerId;
+      const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
+
+      window.BingoMultiplayer.send('PLAYER_ANNOUNCE', {
+        id: myId,
+        name: myName,
+        isHost: this.state.isHost,
+        isReady: this.state.amIReady,
+        linesCount: this.state.myCompletedLineIds ? this.state.myCompletedLineIds.size : 0
+      });
+
+      if (this.state.isHost) {
+        window.BingoMultiplayer.send('ROOM_SYNC', {
+          players: Array.from(this.state.roomPlayers.values())
         });
       }
     });
 
     window.BingoMultiplayer.on('PLAYER_ANNOUNCE', (data) => {
-      this.state.opponentName = data.name || 'Friend';
-      this.dom.opponentNameDisplay.textContent = this.state.opponentName;
+      if (data.id === window.BingoMultiplayer.playerId) return;
+
+      this.state.roomPlayers.set(data.id, {
+        id: data.id,
+        name: data.name || 'Friend',
+        isHost: !!data.isHost,
+        isReady: !!data.isReady,
+        linesCount: data.linesCount || 0
+      });
+
+      this.renderRoomRoster();
+      this.updateOpponentStatusDisplays();
+    });
+
+    window.BingoMultiplayer.on('ROOM_SYNC', (data) => {
+      if (!data.players || !Array.isArray(data.players)) return;
+      data.players.forEach(p => {
+        if (p.id !== window.BingoMultiplayer.playerId) {
+          this.state.roomPlayers.set(p.id, {
+            id: p.id,
+            name: p.name || 'Friend',
+            isHost: !!p.isHost,
+            isReady: !!p.isReady,
+            linesCount: p.linesCount || 0
+          });
+        }
+      });
+      this.renderRoomRoster();
+      this.updateOpponentStatusDisplays();
     });
 
     window.BingoMultiplayer.on('PLAYER_READY', (data) => {
-      this.state.isOpponentReady = true;
-      this.showToast(`✅ ${data.playerName || 'Opponent'} is ready!`, 3000);
-
-      if (this.state.amIReady && this.state.isHost) {
-        const startingTurn = Math.random() > 0.5 ? 'host' : 'guest';
-        window.BingoMultiplayer.send('GAME_START', { startingTurn });
-        this.startActiveGame(startingTurn === 'host');
+      const p = this.state.roomPlayers.get(data.id);
+      if (p) {
+        p.isReady = true;
+      } else {
+        this.state.roomPlayers.set(data.id, {
+          id: data.id,
+          name: data.name || 'Player',
+          isHost: false,
+          isReady: true,
+          linesCount: 0
+        });
       }
+      this.renderRoomRoster();
+      this.showToast(`✅ ${data.name || 'Player'} is ready!`, 2500);
+      this.checkHostStartEligibility();
     });
 
     window.BingoMultiplayer.on('GAME_START', (data) => {
-      const amIStarting = (this.state.isHost && data.startingTurn === 'host') || (!this.state.isHost && data.startingTurn === 'guest');
-      this.startActiveGame(amIStarting);
+      this.handleGameStarted(data);
     });
 
     window.BingoMultiplayer.on('NUMBER_CALLED', (data) => {
       const num = data.number;
       if (!num) return;
 
+      const myId = window.BingoMultiplayer.playerId;
       const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
 
       this.state.calledNumbers.add(num);
@@ -1174,21 +1545,43 @@ class BingoApp {
       window.bingoAudio.playStrike();
 
       this.dom.latestCallNumber.textContent = num;
-      this.dom.latestCallCaller.textContent = `Called by ${data.callerName || this.state.opponentName}`;
+      this.dom.latestCallCaller.textContent = `Called by ${data.callerName || 'Player'}`;
 
       const evaluation = window.BingoLogic.evaluateBoard(this.state.gameBoard, this.state.calledNumbers);
       this.renderGameBoard();
       this.saveCurrentGame();
+
+      // Broadcast my line count if it updated
+      window.BingoMultiplayer.send('LINES_UPDATE', {
+        playerId: myId,
+        playerName: myName,
+        lineCount: evaluation.lineCount
+      });
 
       if (evaluation.isBingo) {
         this.handleGameOver(myName, true);
         return;
       }
 
-      this.state.isMyTurn = true;
+      this.state.turnIndex = (typeof data.turnIndex === 'number') ? data.turnIndex : 0;
+      this.state.currentTurnPlayerId = data.nextTurnPlayerId;
+      this.state.isMyTurn = (data.nextTurnPlayerId === myId);
+
       this.updateTurnBanner();
+      this.updateOpponentStatusDisplays();
       this.renderGameBoard();
-      window.bingoAudio.playYourTurn();
+
+      if (this.state.isMyTurn) {
+        window.bingoAudio.playYourTurn();
+      }
+    });
+
+    window.BingoMultiplayer.on('LINES_UPDATE', (data) => {
+      const p = this.state.roomPlayers.get(data.playerId);
+      if (p) {
+        p.linesCount = data.lineCount;
+      }
+      this.updateOpponentStatusDisplays();
     });
 
     window.BingoMultiplayer.on('BINGO_WIN', (data) => {
