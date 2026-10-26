@@ -19,34 +19,14 @@
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=2.2.2">
   <link rel="apple-touch-icon" href="assets/favicon.svg?v=2.2.2">
 
-  <!-- Automated Storage Cache Invalidator Script (Runs Before Render - Global Remote Wipe) -->
-  <script>
-    (function() {
-      var LATEST_VERSION = '3.1.0';
-      var currentVer = localStorage.getItem('bingo_cache_version');
-      if (currentVer !== LATEST_VERSION) {
-        var legacyKeys = [
-          'bingo_users_db_v1',
-          'bingo_current_user_v1',
-          'bingo_active_saved_game_v1',
-          'bingo_shared_leaderboard_v1',
-          'bingo_player_name',
-          'bingo_dauber_color',
-          'bingo_users_db_v2',
-          'bingo_current_user_v2',
-          'bingo_guest_user_v2',
-          'bingo_active_saved_game_v2'
-        ];
-        legacyKeys.forEach(function(k) { localStorage.removeItem(k); });
-        localStorage.setItem('bingo_cache_version', LATEST_VERSION);
-      }
-    })();
-  </script>
+  <!-- Security & Privacy Meta -->
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
 
   <!-- Versioned Stylesheets for Instant Mobile Responsiveness -->
-  <link rel="stylesheet" href="css/style.css?v=3.1.0">
-  <link rel="stylesheet" href="css/bingo-paper.css?v=3.1.0">
-  <link rel="stylesheet" href="css/leaderboard.css?v=3.1.0">
+  <link rel="stylesheet" href="css/style.css?v=3.2.0">
+  <link rel="stylesheet" href="css/bingo-paper.css?v=3.2.0">
+  <link rel="stylesheet" href="css/leaderboard.css?v=3.2.0">
 
   <!-- MQTT over WebSockets CDN -->
   <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
@@ -577,11 +557,6 @@
       <button class="btn btn-danger btn-block btn-lg" id="btn-modal-signout">
         🚪 Sign Out
       </button>
-
-      <!-- Clear Cache 1-Click Reset Button -->
-      <button class="btn btn-secondary btn-block" id="btn-clear-cache" style="margin-top:10px; font-size:0.78rem; color:var(--text-muted); min-height:36px;">
-        🧹 Clear App Cache & Hard Reload
-      </button>
     </div>
   </div>
 
@@ -738,13 +713,13 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Versioned Scripts for Clean Cache Busting -->
-  <script src="js/confetti.js?v=3.1.0"></script>
-  <script src="js/qrcode-lib.js?v=3.1.0"></script>
-  <script src="js/audio.js?v=3.1.0"></script>
-  <script src="js/bingo-logic.js?v=3.1.0"></script>
-  <script src="js/auth-storage.js?v=3.1.0"></script>
-  <script src="js/multiplayer.js?v=3.1.0"></script>
-  <script src="js/app.js?v=3.1.0"></script>
+  <script src="js/confetti.js?v=3.2.0"></script>
+  <script src="js/qrcode-lib.js?v=3.2.0"></script>
+  <script src="js/audio.js?v=3.2.0"></script>
+  <script src="js/bingo-logic.js?v=3.2.0"></script>
+  <script src="js/auth-storage.js?v=3.2.0"></script>
+  <script src="js/multiplayer.js?v=3.2.0"></script>
+  <script src="js/app.js?v=3.2.0"></script>
 
 </body>
 </html>

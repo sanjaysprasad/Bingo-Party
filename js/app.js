@@ -377,16 +377,6 @@ class BingoApp {
       this.openAuthModal('signup');
     });
 
-    // 7. Clear Cache & Hard Reset Button
-    const btnClearCache = document.getElementById('btn-clear-cache');
-    if (btnClearCache) {
-      btnClearCache.addEventListener('click', () => {
-        if (confirm('Clear all local app cache and reload? This will wipe stored cache and reload freshly.')) {
-          window.BingoAuthStorage.clearAllCache();
-        }
-      });
-    }
-
     // Toggle Sign In vs Sign Up tabs in Auth Modal
     this.dom.tabAuthSignin.addEventListener('click', () => {
       this.openAuthModal('signin');
@@ -629,6 +619,17 @@ class BingoApp {
     }
   }
 
+  // Escape HTML utility to prevent Cross-Site Scripting (XSS)
+  escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   // =========================================================================
   // LEADERBOARD & MATCH HISTORY RENDERING
   // =========================================================================
@@ -661,15 +662,15 @@ class BingoApp {
         <td><span class="rank-badge ${rankClass}">${medal}</span></td>
         <td>
           <div class="player-cell-info">
-            <span class="player-cell-avatar">${p.avatar}</span>
-            <strong>${p.username} ${p.username === currentUsername ? '(You)' : ''}</strong>
+            <span class="player-cell-avatar">${this.escapeHTML(p.avatar)}</span>
+            <strong>${this.escapeHTML(p.username)} ${p.username === currentUsername ? '(You)' : ''}</strong>
           </div>
         </td>
-        <td style="color:#38bdf8; font-weight:700;">${p.rankTitle}</td>
-        <td style="color:#4ade80; font-weight:800;">${p.wins}</td>
-        <td style="color:#94a3b8;">${p.losses}</td>
-        <td><strong>${p.winRate}%</strong></td>
-        <td><span style="color:#f59e0b; font-weight:800;">🔥 ${p.streak}</span></td>
+        <td style="color:#38bdf8; font-weight:700;">${this.escapeHTML(p.rankTitle)}</td>
+        <td style="color:#4ade80; font-weight:800;">${Number(p.wins) || 0}</td>
+        <td style="color:#94a3b8;">${Number(p.losses) || 0}</td>
+        <td><strong>${Number(p.winRate) || 0}%</strong></td>
+        <td><span style="color:#f59e0b; font-weight:800;">🔥 ${Number(p.streak) || 0}</span></td>
       `;
 
       this.dom.leaderboardTbody.appendChild(tr);
@@ -705,24 +706,31 @@ class BingoApp {
           <span class="history-result-badge ${badgeClass}">${resultText}</span>
           <div>
             <div style="font-weight:800; font-size:1rem;">
-              vs ${m.opponent} <span style="font-size:0.8rem; color:var(--text-muted); font-weight:normal;">(${m.mode})</span>
+              vs ${this.escapeHTML(m.opponent)} <span style="font-size:0.8rem; color:var(--text-muted); font-weight:normal;">(${this.escapeHTML(m.mode)})</span>
             </div>
-            <div class="history-date">📅 ${m.formattedDate}</div>
+            <div class="history-date">📅 ${this.escapeHTML(m.formattedDate)}</div>
           </div>
         </div>
 
         <div style="display:flex; align-items:center; gap:14px;">
           <div style="text-align:right; font-size:0.85rem;">
-            <div>Lines: <strong style="color:#f59e0b;">${m.myLines}/5</strong></div>
-            <div style="color:var(--text-muted); font-size:0.75rem;">${m.turns} turns</div>
+            <div>Lines: <strong style="color:#f59e0b;">${Number(m.myLines) || 0}/5</strong></div>
+            <div style="color:var(--text-muted); font-size:0.75rem;">${Number(m.turns) || 0} turns</div>
           </div>
           ${m.myBoard && m.myBoard.length === 25 ? `
-            <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick='window.bingoApp.inspectHistoricBoard(${JSON.stringify(m)})'>
+            <button class="btn btn-secondary btn-inspect-board" style="padding:6px 12px; font-size:0.8rem;">
               🔍 Inspect Board
             </button>
           ` : ''}
         </div>
       `;
+
+      const inspectBtn = card.querySelector('.btn-inspect-board');
+      if (inspectBtn) {
+        inspectBtn.addEventListener('click', () => {
+          this.inspectHistoricBoard(m);
+        });
+      }
 
       this.dom.historyFeedContainer.appendChild(card);
     });
@@ -995,7 +1003,7 @@ class BingoApp {
       const info = document.createElement('div');
       info.className = 'setup-player-info';
       info.innerHTML = `
-        <span>${isMe ? '👉 ' : ''}${player.name} ${isMe ? '(You)' : ''}</span>
+        <span>${isMe ? '👉 ' : ''}${this.escapeHTML(player.name)} ${isMe ? '(You)' : ''}</span>
         ${player.isHost ? '<span class="badge-host">👑 Host</span>' : ''}
       `;
 
@@ -1218,8 +1226,8 @@ class BingoApp {
       const pill = document.createElement('div');
       pill.className = 'player-status-pill' + (isCurrentTurn ? ' active-turn' : '');
       pill.innerHTML = `
-        <span>${isCurrentTurn ? '👉 ' : ''}${p.name}:</span>
-        <span style="color:#f59e0b; font-weight:700;">(${p.linesCount || 0}/5)</span>
+        <span>${isCurrentTurn ? '👉 ' : ''}${this.escapeHTML(p.name)}:</span>
+        <span style="color:#f59e0b; font-weight:700;">(${Number(p.linesCount) || 0}/5)</span>
       `;
       this.dom.gameOpponentsContainer.appendChild(pill);
     });
@@ -1446,11 +1454,13 @@ class BingoApp {
   // =========================================================================
   setupMultiplayerListeners() {
     window.BingoMultiplayer.on('PLAYER_JOINED', (data) => {
+      if (!data || typeof data !== 'object' || !data.id) return;
       if (data.id === window.BingoMultiplayer.playerId) return;
 
+      const cleanName = String(data.name || 'Friend').substring(0, 20);
       this.state.roomPlayers.set(data.id, {
-        id: data.id,
-        name: data.name || 'Friend',
+        id: String(data.id).substring(0, 30),
+        name: cleanName,
         isHost: !!data.isHost,
         isReady: !!data.isReady,
         linesCount: 0
@@ -1458,7 +1468,7 @@ class BingoApp {
 
       this.renderRoomRoster();
       this.updateOpponentStatusDisplays();
-      this.showToast(`👋 ${data.name || 'Friend'} joined the room!`, 3000);
+      this.showToast(`👋 ${cleanName} joined the room!`, 3000);
       window.bingoAudio.playPop();
 
       const myId = window.BingoMultiplayer.playerId;
@@ -1480,14 +1490,17 @@ class BingoApp {
     });
 
     window.BingoMultiplayer.on('PLAYER_ANNOUNCE', (data) => {
+      if (!data || typeof data !== 'object' || !data.id) return;
       if (data.id === window.BingoMultiplayer.playerId) return;
 
+      const cleanName = String(data.name || 'Friend').substring(0, 20);
+      const safeLines = Number.isInteger(data.linesCount) && data.linesCount >= 0 && data.linesCount <= 5 ? data.linesCount : 0;
       this.state.roomPlayers.set(data.id, {
-        id: data.id,
-        name: data.name || 'Friend',
+        id: String(data.id).substring(0, 30),
+        name: cleanName,
         isHost: !!data.isHost,
         isReady: !!data.isReady,
-        linesCount: data.linesCount || 0
+        linesCount: safeLines
       });
 
       this.renderRoomRoster();
@@ -1495,15 +1508,16 @@ class BingoApp {
     });
 
     window.BingoMultiplayer.on('ROOM_SYNC', (data) => {
-      if (!data.players || !Array.isArray(data.players)) return;
+      if (!data || !data.players || !Array.isArray(data.players)) return;
       data.players.forEach(p => {
-        if (p.id !== window.BingoMultiplayer.playerId) {
+        if (p && p.id && p.id !== window.BingoMultiplayer.playerId) {
+          const safeLines = Number.isInteger(p.linesCount) && p.linesCount >= 0 && p.linesCount <= 5 ? p.linesCount : 0;
           this.state.roomPlayers.set(p.id, {
-            id: p.id,
-            name: p.name || 'Friend',
+            id: String(p.id).substring(0, 30),
+            name: String(p.name || 'Friend').substring(0, 20),
             isHost: !!p.isHost,
             isReady: !!p.isReady,
-            linesCount: p.linesCount || 0
+            linesCount: safeLines
           });
         }
       });
@@ -1512,20 +1526,22 @@ class BingoApp {
     });
 
     window.BingoMultiplayer.on('PLAYER_READY', (data) => {
+      if (!data || !data.id) return;
+      const cleanName = String(data.name || 'Player').substring(0, 20);
       const p = this.state.roomPlayers.get(data.id);
       if (p) {
         p.isReady = true;
       } else {
         this.state.roomPlayers.set(data.id, {
-          id: data.id,
-          name: data.name || 'Player',
+          id: String(data.id).substring(0, 30),
+          name: cleanName,
           isHost: false,
           isReady: true,
           linesCount: 0
         });
       }
       this.renderRoomRoster();
-      this.showToast(`✅ ${data.name || 'Player'} is ready!`, 2500);
+      this.showToast(`✅ ${cleanName} is ready!`, 2500);
       this.checkHostStartEligibility();
     });
 
@@ -1534,8 +1550,10 @@ class BingoApp {
     });
 
     window.BingoMultiplayer.on('NUMBER_CALLED', (data) => {
-      const num = data.number;
-      if (!num) return;
+      if (!data || typeof data !== 'object') return;
+      const num = Number(data.number);
+      if (!Number.isInteger(num) || num < 1 || num > 25) return;
+      if (this.state.calledNumbers.has(num)) return;
 
       const myId = window.BingoMultiplayer.playerId;
       const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
@@ -1544,8 +1562,9 @@ class BingoApp {
       this.state.turnCount++;
       window.bingoAudio.playStrike();
 
+      const safeCaller = String(data.callerName || 'Player').substring(0, 25);
       this.dom.latestCallNumber.textContent = num;
-      this.dom.latestCallCaller.textContent = `Called by ${data.callerName || 'Player'}`;
+      this.dom.latestCallCaller.textContent = `Called by ${safeCaller}`;
 
       const evaluation = window.BingoLogic.evaluateBoard(this.state.gameBoard, this.state.calledNumbers);
       this.renderGameBoard();
@@ -1577,15 +1596,20 @@ class BingoApp {
     });
 
     window.BingoMultiplayer.on('LINES_UPDATE', (data) => {
+      if (!data || typeof data !== 'object' || !data.playerId) return;
+      const count = Number(data.lineCount);
+      if (!Number.isInteger(count) || count < 0 || count > 5) return;
       const p = this.state.roomPlayers.get(data.playerId);
       if (p) {
-        p.linesCount = data.lineCount;
+        p.linesCount = count;
       }
       this.updateOpponentStatusDisplays();
     });
 
     window.BingoMultiplayer.on('BINGO_WIN', (data) => {
-      this.handleGameOver(data.winnerName || 'Opponent', false);
+      if (!data || typeof data !== 'object') return;
+      const winner = String(data.winnerName || 'Opponent').substring(0, 25);
+      this.handleGameOver(winner, false);
     });
 
     window.BingoMultiplayer.on('REMATCH_REQUEST', () => {
@@ -1603,19 +1627,37 @@ class BingoApp {
   }
 
   sendChatMessage(text) {
+    const rawText = String(text || '').trim();
+    if (!rawText) return;
+    const cleanText = rawText.substring(0, 150);
+
     const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
     const msg = {
       sender: myName,
-      text: text
+      text: cleanText
     };
     window.BingoMultiplayer.send('CHAT', msg);
     this.appendChatMessage(msg);
   }
 
   appendChatMessage(msg) {
+    if (!msg || typeof msg !== 'object') return;
+    const sender = String(msg.sender || 'Player').substring(0, 25);
+    const text = String(msg.text || '').substring(0, 150);
+    if (!text.trim()) return;
+
     const div = document.createElement('div');
     div.className = 'chat-msg';
-    div.innerHTML = `<span class="sender">${msg.sender}:</span> <span>${msg.text}</span>`;
+
+    const senderSpan = document.createElement('span');
+    senderSpan.className = 'sender';
+    senderSpan.textContent = sender + ': ';
+
+    const textSpan = document.createElement('span');
+    textSpan.textContent = text;
+
+    div.appendChild(senderSpan);
+    div.appendChild(textSpan);
     this.dom.chatMessages.appendChild(div);
     this.dom.chatMessages.scrollTop = this.dom.chatMessages.scrollHeight;
 
@@ -1625,6 +1667,9 @@ class BingoApp {
   }
 
   triggerReaction(emoji, broadcast = true) {
+    const ALLOWED_EMOJIS = ['🔥', '👏', '😱', '🎉', '💪', '🤣', '⭐', '❤️', '👍'];
+    if (!ALLOWED_EMOJIS.includes(emoji)) return;
+
     window.bingoAudio.playPop();
     const el = document.createElement('div');
     el.className = 'floating-emoji';

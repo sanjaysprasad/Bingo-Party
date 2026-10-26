@@ -53,7 +53,9 @@ class BingoMultiplayer {
       this.broadcastChannel = new BroadcastChannel(`bingo_paper_${this.roomCode}`);
       this.broadcastChannel.onmessage = (event) => {
         const msg = event.data;
-        if (!msg || msg.senderId === this.playerId) return; // ignore self
+        if (!msg || typeof msg !== 'object' || typeof msg.type !== 'string') return;
+        if (!/^[A-Z0-9_]+$/.test(msg.type)) return;
+        if (msg.senderId === this.playerId) return; // ignore self
         if (msg.msgId && this.processedMsgIds.has(msg.msgId)) return; // ignore duplicate
         if (msg.msgId) {
           this.processedMsgIds.add(msg.msgId);
@@ -62,7 +64,7 @@ class BingoMultiplayer {
             this.processedMsgIds.delete(first);
           }
         }
-        this.emit(msg.type, msg.payload);
+        this.emit(msg.type, msg.payload || {});
       };
     } catch (e) {
       console.warn('BroadcastChannel not supported', e);
@@ -118,7 +120,9 @@ class BingoMultiplayer {
       this.mqttClient.on('message', (t, message) => {
         try {
           const msg = JSON.parse(message.toString());
-          if (!msg || msg.senderId === this.playerId) return; // ignore self
+          if (!msg || typeof msg !== 'object' || typeof msg.type !== 'string') return;
+          if (!/^[A-Z0-9_]+$/.test(msg.type)) return;
+          if (msg.senderId === this.playerId) return; // ignore self
           if (msg.msgId && this.processedMsgIds.has(msg.msgId)) return; // ignore duplicate
           if (msg.msgId) {
             this.processedMsgIds.add(msg.msgId);
@@ -127,7 +131,7 @@ class BingoMultiplayer {
               this.processedMsgIds.delete(first);
             }
           }
-          this.emit(msg.type, msg.payload);
+          this.emit(msg.type, msg.payload || {});
         } catch (e) {
           console.error('Failed to parse MQTT message:', e);
         }
