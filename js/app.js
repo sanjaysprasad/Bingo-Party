@@ -403,8 +403,15 @@ class BingoApp {
 
       const res = window.BingoAuthStorage.signIn(u, p);
       if (res.success) {
-        this.showToast(`Welcome back, ${res.user.username}!`, 3000);
+        if (res.isNew) {
+          this.showToast(`✨ Welcome! Profile created & signed in as ${res.user.username}!`, 3500);
+        } else {
+          this.showToast(`Welcome back, ${res.user.username}!`, 3000);
+        }
         this.dom.modalAuth.classList.remove('active');
+        if (this.dom.modalWelcomeGate) {
+          this.dom.modalWelcomeGate.classList.remove('active');
+        }
         this.refreshUserProfileUI();
         this.checkSavedActiveGame();
       } else {
@@ -420,9 +427,17 @@ class BingoApp {
 
       const res = window.BingoAuthStorage.signUp(u, p, this.selectedSignupAvatar);
       if (res.success) {
-        this.showToast(`Account created for ${res.user.username}!`, 3000);
+        if (res.existing) {
+          this.showToast(`Welcome back, ${res.user.username}!`, 3000);
+        } else {
+          this.showToast(`Account created for ${res.user.username}!`, 3000);
+        }
         this.dom.modalAuth.classList.remove('active');
+        if (this.dom.modalWelcomeGate) {
+          this.dom.modalWelcomeGate.classList.remove('active');
+        }
         this.refreshUserProfileUI();
+        this.checkSavedActiveGame();
       } else {
         alert(res.error);
       }
