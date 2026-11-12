@@ -1,7 +1,7 @@
 {
-  "name": "BINGO Party",
-  "short_name": "BINGO",
-  "description": "Classic 1-25 Pen & Paper Multiplayer BINGO",
+  "name": "PartyPlay Hub",
+  "short_name": "PartyPlay",
+  "description": "Multiplayer Tabletop & Board Game Hub with Bingo Party, Monopoly, and Uno",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0b0f17",

@@ -1,11 +1,53 @@
 /**
- * Classic 1-25 Pen-and-Paper BINGO - Main Application Coordinator
- * Handles Navigation, Authentication (Guest/Login/Signup), Sign Out,
- * Welcome Gate, Ongoing Game Resumption, Match History, and Realtime Gameplay.
+ * PartyPlay Hub - Multi-Game Platform Coordinator
+ * Coordinates Navigation, Multi-Game Architecture (Bingo, Monopoly, Uno),
+ * Game-Specific Stats & Leaderboard, Authentication, and Gameplay.
  */
+
+// Multi-Game Platform Registry
+window.GAME_REGISTRY = {
+  bingo: {
+    id: 'bingo',
+    name: 'Bingoparty',
+    tagline: 'Classic 1-25 School Pen & Paper',
+    icon: '🎲',
+    status: 'playable',
+    badge: 'Playable Now',
+    minPlayers: 1,
+    maxPlayers: 8,
+    description: 'Nostalgic 5x5 school pen & paper game! Fill numbers 1 to 25, take turns calling, strike off lines to cross B-I-N-G-O. First to 5 lines wins!'
+  },
+  monopoly: {
+    id: 'monopoly',
+    name: 'Mallu Monopoly',
+    tagline: 'Nammude Swantham Real-Estate Game',
+    icon: '🎩',
+    status: 'playable',
+    badge: 'Playable Now',
+    minPlayers: 2,
+    maxPlayers: 8,
+    description: 'Wheel, deal, and bankrupt rivals across Marine Drive, Munnar, Mittai Theruvu & Kowdiar Palace! Collect ₹ Lakhs in rent, manage KSRTC depots, and avoid Bebco fines.'
+  },
+  uno: {
+    id: 'uno',
+    name: 'Uno Party',
+    tagline: 'Wild Card Battles & Color Chaos',
+    icon: '🃏',
+    status: 'coming_soon',
+    badge: 'Action Cards',
+    minPlayers: 2,
+    maxPlayers: 10,
+    description: 'Match numbers and colors, unleash Skips, Reverses, and Wild +4 cards! Don\'t forget to tap UNO before someone catches you!'
+  }
+};
+
 class BingoApp {
   constructor() {
     this.currentView = 'home';
+    this.activeGameId = 'bingo';
+    this.leaderboardFilter = 'all';
+    this.historyFilter = 'all';
+
     this.state = {
       mode: 'bot',              // 'bot' | 'multiplayer'
       roomCode: '',
@@ -49,6 +91,16 @@ class BingoApp {
       viewGame: document.getElementById('view-game'),
       viewLeaderboard: document.getElementById('view-leaderboard'),
       viewHistory: document.getElementById('view-history'),
+      viewMonopoly: document.getElementById('view-monopoly'),
+      viewUno: document.getElementById('view-uno'),
+
+      // Game Selection Buttons
+      btnSelectBingo: document.getElementById('btn-select-bingo'),
+      btnSelectMonopoly: document.getElementById('btn-select-monopoly'),
+      btnSelectUno: document.getElementById('btn-select-uno'),
+      btnLobbyBack: document.getElementById('btn-lobby-back'),
+      btnMonopolyBack: document.getElementById('btn-monopoly-back'),
+      btnUnoBack: document.getElementById('btn-uno-back'),
 
       // Navigation & Header
       navButtons: document.querySelectorAll('.nav-link-btn'),
@@ -148,9 +200,28 @@ class BingoApp {
       profileModalWins: document.getElementById('profile-modal-wins'),
       profileModalLosses: document.getElementById('profile-modal-losses'),
       profileModalStreak: document.getElementById('profile-modal-streak'),
+      profileGameBingo: document.getElementById('profile-game-bingo'),
+      profileGameMonopoly: document.getElementById('profile-game-monopoly'),
+      profileGameUno: document.getElementById('profile-game-uno'),
       guestUpgradeBanner: document.getElementById('guest-upgrade-banner'),
       btnUpgradeGuest: document.getElementById('btn-upgrade-guest'),
       btnModalSignout: document.getElementById('btn-modal-signout'),
+
+      // Featured Games Arcade Cards
+      cardBingoRecord: document.getElementById('card-bingo-record'),
+      cardMonopolyRecord: document.getElementById('card-monopoly-record'),
+      cardUnoRecord: document.getElementById('card-uno-record'),
+      btnCardBingoBot: document.getElementById('btn-card-bingo-bot'),
+      btnCardBingoMulti: document.getElementById('btn-card-bingo-multi'),
+      btnCardMonopolyPreview: document.getElementById('btn-card-monopoly-preview'),
+      btnCardUnoPreview: document.getElementById('btn-card-uno-preview'),
+
+      // Game Preview Modal
+      modalGamePreview: document.getElementById('modal-game-preview'),
+      previewGameIcon: document.getElementById('preview-game-icon'),
+      previewGameTitle: document.getElementById('preview-game-title'),
+      previewGameStatus: document.getElementById('preview-game-status'),
+      previewGameDesc: document.getElementById('preview-game-desc'),
 
       modalAuth: document.getElementById('modal-auth'),
       tabAuthSignin: document.getElementById('tab-auth-signin'),
@@ -242,6 +313,112 @@ class BingoApp {
     this.dom.btnLeaderboardPlay.addEventListener('click', () => {
       this.switchView('lobby');
     });
+
+    // Main Game Selection Buttons
+    if (this.dom.btnSelectBingo) {
+      this.dom.btnSelectBingo.addEventListener('click', () => {
+        this.switchView('lobby');
+      });
+    }
+
+    if (this.dom.btnSelectMonopoly) {
+      this.dom.btnSelectMonopoly.addEventListener('click', () => {
+        this.switchView('monopoly');
+      });
+    }
+
+    if (this.dom.btnSelectUno) {
+      this.dom.btnSelectUno.addEventListener('click', () => {
+        this.switchView('uno');
+      });
+    }
+
+    // Back to Games Hub Buttons
+    if (this.dom.btnLobbyBack) {
+      this.dom.btnLobbyBack.addEventListener('click', () => {
+        this.switchView('home');
+      });
+    }
+
+    if (this.dom.btnMonopolyBack) {
+      this.dom.btnMonopolyBack.addEventListener('click', () => {
+        this.switchView('home');
+      });
+    }
+
+    if (this.dom.btnUnoBack) {
+      this.dom.btnUnoBack.addEventListener('click', () => {
+        this.switchView('home');
+      });
+    }
+
+    // Multi-Game Arcade Card Buttons
+    if (this.dom.btnCardBingoBot) {
+      this.dom.btnCardBingoBot.addEventListener('click', () => {
+        if (!this.ensureUserSession()) return;
+        this.startSoloBotGame();
+      });
+    }
+
+    if (this.dom.btnCardBingoMulti) {
+      this.dom.btnCardBingoMulti.addEventListener('click', () => {
+        if (!this.ensureUserSession()) return;
+        this.switchView('lobby');
+      });
+    }
+
+    if (this.dom.btnCardMonopolyPreview) {
+      this.dom.btnCardMonopolyPreview.addEventListener('click', () => {
+        this.openGamePreview('monopoly');
+      });
+    }
+
+    if (this.dom.btnCardUnoPreview) {
+      this.dom.btnCardUnoPreview.addEventListener('click', () => {
+        this.openGamePreview('uno');
+      });
+    }
+
+    // Leaderboard Game Filter Tabs
+    document.querySelectorAll('.game-filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.game-filter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        this.leaderboardFilter = tab.dataset.leaderboardFilter || 'all';
+        this.renderLeaderboardView();
+      });
+    });
+
+    // Match History Game Filter Tabs
+    document.querySelectorAll('.history-filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.history-filter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        this.historyFilter = tab.dataset.historyFilter || 'all';
+        this.renderHistoryView();
+      });
+    });
+  }
+
+  openGamePreview(gameKey) {
+    const registry = window.GAME_REGISTRY || {};
+    const game = registry[gameKey];
+    if (!game) return;
+
+    if (this.dom.previewGameIcon) this.dom.previewGameIcon.textContent = game.icon;
+    if (this.dom.previewGameTitle) this.dom.previewGameTitle.textContent = game.name;
+    if (this.dom.previewGameStatus) this.dom.previewGameStatus.textContent = game.badge;
+    if (this.dom.previewGameDesc) {
+      this.dom.previewGameDesc.innerHTML = `
+        <strong style="color:#f8fafc; font-size:1rem;">${this.escapeHTML(game.tagline)}</strong><br><br>
+        ${this.escapeHTML(game.description)}<br><br>
+        👥 <strong>Supported Players:</strong> ${game.minPlayers} to ${game.maxPlayers} players.<br>
+        ⚡ <strong>Status:</strong> Game namespace and user stats schema are activated in PartyPlay Hub. Ready for custom board & rules integration!
+      `;
+    }
+    if (this.dom.modalGamePreview) {
+      this.dom.modalGamePreview.classList.add('active');
+    }
   }
 
   switchView(viewName) {
@@ -273,6 +450,17 @@ class BingoApp {
       this.dom.viewHistory.classList.add('active');
       this.dom.btnHeaderInvite.style.display = 'none';
       this.renderHistoryView();
+    } else if (viewName === 'monopoly') {
+      if (this.dom.viewMonopoly) this.dom.viewMonopoly.classList.add('active');
+      this.dom.btnHeaderInvite.style.display = 'none';
+      if (window.malluMonopolyUI) {
+        window.malluMonopolyUI.checkSavedGameBanner();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (viewName === 'uno') {
+      if (this.dom.viewUno) this.dom.viewUno.classList.add('active');
+      this.dom.btnHeaderInvite.style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     this.updateChatVisibility();
@@ -480,6 +668,21 @@ class BingoApp {
     this.dom.profileModalLosses.textContent = user.stats?.losses || 0;
     this.dom.profileModalStreak.textContent = `🔥 ${user.stats?.streak || 0}`;
 
+    // Update Per-Game Stats in Profile Modal
+    const bingoS = window.BingoAuthStorage.getUserGameStats(user?.username, 'bingo');
+    const monopolyS = window.BingoAuthStorage.getUserGameStats(user?.username, 'monopoly');
+    const unoS = window.BingoAuthStorage.getUserGameStats(user?.username, 'uno');
+
+    if (this.dom.profileGameBingo) {
+      this.dom.profileGameBingo.textContent = `${bingoS.wins}W / ${bingoS.losses}L (Streak: ${bingoS.streak})`;
+    }
+    if (this.dom.profileGameMonopoly) {
+      this.dom.profileGameMonopoly.textContent = `${monopolyS.wins}W / ${monopolyS.losses}L`;
+    }
+    if (this.dom.profileGameUno) {
+      this.dom.profileGameUno.textContent = `${unoS.wins}W / ${unoS.losses}L`;
+    }
+
     this.dom.modalProfile.classList.add('active');
   }
 
@@ -516,6 +719,10 @@ class BingoApp {
       this.dom.homeStatWinrate.textContent = '0%';
       this.dom.homeStatStreak.textContent = '🔥 0';
       this.dom.homeStatRank.textContent = 'None';
+
+      if (this.dom.cardBingoRecord) this.dom.cardBingoRecord.textContent = '0W / 0L';
+      if (this.dom.cardMonopolyRecord) this.dom.cardMonopolyRecord.textContent = '0W / 0L';
+      if (this.dom.cardUnoRecord) this.dom.cardUnoRecord.textContent = '0W / 0L';
       return;
     }
 
@@ -562,6 +769,21 @@ class BingoApp {
     this.dom.homeStatWinrate.textContent = `${rate}%`;
     this.dom.homeStatStreak.textContent = `🔥 ${streak}`;
     this.dom.homeStatRank.textContent = rankTitle;
+
+    // Update Arcade game card records
+    const bingoStats = window.BingoAuthStorage.getUserGameStats(user.username, 'bingo');
+    const monopolyStats = window.BingoAuthStorage.getUserGameStats(user.username, 'monopoly');
+    const unoStats = window.BingoAuthStorage.getUserGameStats(user.username, 'uno');
+
+    if (this.dom.cardBingoRecord) {
+      this.dom.cardBingoRecord.textContent = `${bingoStats.wins}W / ${bingoStats.losses}L (${bingoStats.winRate}%)`;
+    }
+    if (this.dom.cardMonopolyRecord) {
+      this.dom.cardMonopolyRecord.textContent = `${monopolyStats.wins}W / ${monopolyStats.losses}L`;
+    }
+    if (this.dom.cardUnoRecord) {
+      this.dom.cardUnoRecord.textContent = `${unoStats.wins}W / ${unoStats.losses}L`;
+    }
   }
 
   // Ensure user has chosen Guest or Account before starting a game
@@ -649,15 +871,19 @@ class BingoApp {
   // LEADERBOARD & MATCH HISTORY RENDERING
   // =========================================================================
   renderLeaderboardView() {
-    const list = window.BingoAuthStorage.getLeaderboard();
+    const filter = this.leaderboardFilter || 'all';
+    const list = window.BingoAuthStorage.getLeaderboard(filter);
     const currentUsername = window.BingoAuthStorage.currentUser?.username;
     this.dom.leaderboardTbody.innerHTML = '';
 
-    if (list.length === 0) {
+    const hasAnyRecord = list.some(p => (p.wins > 0 || p.losses > 0));
+    if (!hasAnyRecord) {
+      const reg = window.GAME_REGISTRY || {};
+      const gameTitle = reg[filter] ? reg[filter].name : 'PartyPlay Hub';
       this.dom.leaderboardTbody.innerHTML = `
         <tr>
           <td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted);">
-            No registered accounts yet! Create an account and play to claim the #1 spot on the leaderboard!
+            No match records found yet for <strong>${this.escapeHTML(gameTitle)}</strong>. Play a match to claim the #1 spot on this leaderboard!
           </td>
         </tr>
       `;
@@ -695,32 +921,43 @@ class BingoApp {
   renderHistoryView() {
     const user = window.BingoAuthStorage.currentUser;
     this.dom.historyFeedContainer.innerHTML = '';
+    const filter = (this.historyFilter || 'all').toLowerCase();
 
-    if (!user || !user.history || user.history.length === 0) {
+    const allHistory = (user && user.history) ? user.history : [];
+    const filteredHistory = filter === 'all'
+      ? allHistory
+      : allHistory.filter(m => (m.gameId || 'bingo').toLowerCase() === filter);
+
+    if (!user || filteredHistory.length === 0) {
+      const reg = window.GAME_REGISTRY || {};
+      const gameTitle = filter === 'all' ? 'any game' : (reg[filter] ? reg[filter].name : filter);
       this.dom.historyFeedContainer.innerHTML = `
         <div class="card-glass" style="text-align:center; padding:36px;">
           <div style="font-size:2.5rem; margin-bottom:10px;">📜</div>
-          <h3>No Match History Yet</h3>
+          <h3>No Match History Yet (${filter === 'all' ? 'All Games' : this.escapeHTML(gameTitle)})</h3>
           <p style="color:var(--text-muted); margin-top:6px;">Play a game against the computer or with friends to see your full date and gameplay history logged here!</p>
-          <button class="btn btn-primary" style="margin-top:16px;" onclick="window.bingoApp.switchView('lobby')">Play a Match</button>
+          <button class="btn btn-primary" style="margin-top:16px;" onclick="window.bingoApp.switchView('lobby')">Play Bingo</button>
         </div>
       `;
       return;
     }
 
-    user.history.forEach((m) => {
+    filteredHistory.forEach((m) => {
       const card = document.createElement('div');
       card.className = 'history-card';
 
       const isWon = m.result === 'WON';
       const badgeClass = isWon ? 'result-won' : 'result-lost';
       const resultText = isWon ? '🏆 VICTORY' : '💀 DEFEAT';
+      const gId = (m.gameId || 'bingo').toLowerCase();
+      const gameBadge = gId === 'monopoly' ? '🎩 Mallu Monopoly' : gId === 'uno' ? '🃏 Uno Party' : '🎲 Bingoparty';
 
       card.innerHTML = `
         <div class="history-main-info">
           <span class="history-result-badge ${badgeClass}">${resultText}</span>
           <div>
             <div style="font-weight:800; font-size:1rem;">
+              <span style="font-size:0.75rem; background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:4px; margin-right:6px; color:#38bdf8;">${gameBadge}</span>
               vs ${this.escapeHTML(m.opponent)} <span style="font-size:0.8rem; color:var(--text-muted); font-weight:normal;">(${this.escapeHTML(m.mode)})</span>
             </div>
             <div class="history-date">📅 ${this.escapeHTML(m.formattedDate)}</div>
@@ -729,7 +966,7 @@ class BingoApp {
 
         <div style="display:flex; align-items:center; gap:14px;">
           <div style="text-align:right; font-size:0.85rem;">
-            <div>Lines: <strong style="color:#f59e0b;">${Number(m.myLines) || 0}/5</strong></div>
+            ${m.myLines !== undefined ? `<div>Lines: <strong style="color:#f59e0b;">${Number(m.myLines) || 0}/5</strong></div>` : ''}
             <div style="color:var(--text-muted); font-size:0.75rem;">${Number(m.turns) || 0} turns</div>
           </div>
           ${m.myBoard && m.myBoard.length === 25 ? `
@@ -1425,6 +1662,7 @@ class BingoApp {
     const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Player';
 
     window.BingoAuthStorage.recordMatchResult({
+      gameId: 'bingo',
       opponent: this.state.opponentName,
       mode: this.state.mode === 'bot' ? 'Solo vs Bot' : `Multiplayer (Room: ${this.state.roomCode})`,
       result: result,

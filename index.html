@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>BINGO Party - Classic 1-25 Pen & Paper Multiplayer</title>
+  <title>PartyPlay Hub - Multiplayer Board & Party Games</title>
 
   <!-- Prevent Browser Stale Cache -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -14,19 +14,20 @@
   <meta name="theme-color" content="#0b0f17">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BINGO">
+  <meta name="apple-mobile-web-app-title" content="PartyPlay">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=2.2.2">
-  <link rel="apple-touch-icon" href="assets/favicon.svg?v=2.2.2">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=3.5.0">
+  <link rel="apple-touch-icon" href="assets/favicon.svg?v=3.5.0">
 
   <!-- Security & Privacy Meta -->
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
 
   <!-- Versioned Stylesheets for Instant Mobile Responsiveness -->
-  <link rel="stylesheet" href="css/style.css?v=3.2.1">
-  <link rel="stylesheet" href="css/bingo-paper.css?v=3.2.1">
-  <link rel="stylesheet" href="css/leaderboard.css?v=3.2.1">
+  <link rel="stylesheet" href="css/style.css?v=4.0.0">
+  <link rel="stylesheet" href="css/bingo-paper.css?v=4.0.0">
+  <link rel="stylesheet" href="css/leaderboard.css?v=4.0.0">
+  <link rel="stylesheet" href="css/monopoly.css?v=4.0.0">
 
   <!-- MQTT over WebSockets CDN -->
   <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
@@ -36,14 +37,16 @@
   <!-- App Header (Desktop Nav + Mobile Compact Header) -->
   <header class="app-header">
     <div class="logo-area" id="btn-header-logo">
-      <div class="logo-icon">B</div>
-      <div class="logo-text">BINGO Party</div>
+      <div class="logo-icon">🎮</div>
+      <div class="logo-text">PartyPlay <span class="logo-hub-tag">HUB</span></div>
     </div>
 
     <!-- Desktop Navigation Tabs (Hidden on mobile) -->
     <nav class="header-nav">
-      <button class="nav-link-btn active" data-nav="home">🏠 Home</button>
-      <button class="nav-link-btn" data-nav="lobby">🎮 Play</button>
+      <button class="nav-link-btn active" data-nav="home">🏠 All Games</button>
+      <button class="nav-link-btn" data-nav="lobby">🎲 Bingoparty</button>
+      <button class="nav-link-btn" data-nav="monopoly">🎩 Mallu Monopoly</button>
+      <button class="nav-link-btn" data-nav="uno">🃏 Uno Party</button>
       <button class="nav-link-btn" data-nav="leaderboard">🏆 Leaderboard</button>
       <button class="nav-link-btn" data-nav="history">📜 History</button>
     </nav>
@@ -82,7 +85,7 @@
   <main>
 
     <!-- ======================================================================
-         VIEW 1: HOME PAGE (Hero, Resumption, Stats, Guides)
+         VIEW 1: MAIN PAGE - GAME SELECTION PORTAL
          ====================================================================== -->
     <section id="view-home" class="view active">
       <div class="home-container">
@@ -96,7 +99,7 @@
                 <span class="user-home-name" id="home-user-name">Player</span>
                 <span class="profile-account-type-badge badge-registered" id="home-account-badge">Registered Player</span>
               </div>
-              <div class="user-home-sub" id="home-user-sub">Ready to play classic 1-25 BINGO</div>
+              <div class="user-home-sub" id="home-user-sub">Welcome to PartyPlay Hub — Pick a game below</div>
             </div>
           </div>
           <div class="user-home-actions">
@@ -115,7 +118,7 @@
             <span class="resume-icon">⚡</span>
             <div>
               <div style="font-weight:900; font-size:1.05rem; color:#f8fafc;">
-                Unfinished Game Found!
+                Unfinished Match Found!
               </div>
               <div style="font-size:0.85rem; color:#bae6fd;" id="resume-game-desc">
                 You have a saved game from earlier. Pick up right where you left off!
@@ -124,7 +127,7 @@
           </div>
           <div style="display:flex; gap:8px; width:100%; justify-content:flex-end;">
             <button class="btn btn-primary" id="btn-resume-game">
-              ▶️ Resume Game
+              ▶️ Resume Match
             </button>
             <button class="btn btn-secondary" id="btn-discard-game" style="font-size:0.85rem; padding:8px 12px;">
               Discard
@@ -132,37 +135,100 @@
           </div>
         </div>
 
-        <!-- Home Hero Banner -->
-        <div class="home-hero">
-          <div class="home-hero-badge">⭐ Classic 1-25 School Pen & Paper Edition</div>
-          <h1 class="home-hero-title">
-            Cross Out Numbers.<br>Strike <span style="color:#3b82f6;">B</span><span style="color:#ef4444;">I</span><span style="color:#f59e0b;">N</span><span style="color:#10b981;">G</span><span style="color:#8b5cf6;">O</span>. Win!
+        <!-- Main Portal Header -->
+        <div class="home-portal-header">
+          <div class="home-hero-badge">🎮 Select Your Game</div>
+          <h1 class="home-portal-title">
+            Choose What Game to Play
           </h1>
-          <p class="home-hero-desc">
-            Play the iconic multiplayer game with friends online or solo against a smart AI. Your gameplay, dates, and stats are saved so you can climb the leaderboard!
+          <p class="home-portal-subtitle">
+            Play solo against smart AI or launch real-time online multiplayer rooms with friends:
           </p>
-          <div class="home-actions-row">
-            <button class="btn btn-primary btn-lg" id="btn-home-play-bot">
-              🤖 Play vs Computer (Instant)
-            </button>
-            <button class="btn btn-success btn-lg" id="btn-home-play-multiplayer">
-              👥 Play with Friends
-            </button>
-            <button class="btn btn-secondary btn-lg" id="btn-home-leaderboard">
-              🏆 View Leaderboard
-            </button>
-          </div>
         </div>
 
-        <!-- Player Quick Profile Stats Widget -->
-        <div class="profile-stats-card">
+        <!-- THE 3 MAIN GAMES SELECTOR -->
+        <div class="game-select-grid">
+
+          <!-- 1. BINGO PARTY -->
+          <div class="game-select-card card-bingo" id="card-select-bingo">
+            <div class="game-select-top">
+              <span class="game-select-badge badge-live">🟢 LIVE & PLAYABLE</span>
+              <span class="game-select-players">👥 1–8 Players</span>
+            </div>
+            <div class="game-select-icon">🎲</div>
+            <h2 class="game-select-name">1. Bingoparty</h2>
+            <div class="game-select-tagline">Classic 1-25 Pen & Paper Grid</div>
+            <p class="game-select-description">
+              The nostalgic pen-and-paper school game! Fill your 5×5 grid with numbers 1 to 25, take turns calling numbers, and be the first to strike off 5 lines for B-I-N-G-O!
+            </p>
+            <div class="game-select-stats-bar">
+              <span>Your Bingoparty Stats:</span>
+              <strong id="card-bingo-record" style="color:#fbbf24;">0W / 0L</strong>
+            </div>
+            <div class="game-select-actions">
+              <button class="btn btn-primary btn-block btn-lg" id="btn-select-bingo">
+                🎲 Play Bingoparty
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. MALLU MONOPOLY -->
+          <div class="game-select-card card-monopoly" id="card-select-monopoly">
+            <div class="game-select-top">
+              <span class="game-select-badge badge-mallu">🟢 LIVE & PLAYABLE</span>
+              <span class="game-select-players">👥 2–8 Players</span>
+            </div>
+            <div class="game-select-icon">🎩</div>
+            <h2 class="game-select-name">2. Mallu Monopoly</h2>
+            <div class="game-select-tagline">Nammude Swantham Real-Estate Game</div>
+            <p class="game-select-description">
+              Wheel, deal, and bankrupt rivals across Marine Drive, Munnar, Mittai Theruvu & Kowdiar Palace. Collect ₹ Lakhs in rent, manage KSRTC depots, and avoid Bebco fines!
+            </p>
+            <div class="game-select-stats-bar">
+              <span>Your Mallu Monopoly Stats:</span>
+              <strong id="card-monopoly-record" style="color:#34d399;">0W / 0L</strong>
+            </div>
+            <div class="game-select-actions">
+              <button class="btn btn-success btn-block btn-lg" id="btn-select-monopoly">
+                🌴 Enter Mallu Monopoly
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. UNO PARTY -->
+          <div class="game-select-card card-uno" id="card-select-uno">
+            <div class="game-select-top">
+              <span class="game-select-badge badge-uno">🃏 ACTION CARDS</span>
+              <span class="game-select-players">👥 2–10 Players</span>
+            </div>
+            <div class="game-select-icon">🃏</div>
+            <h2 class="game-select-name">3. Uno Party</h2>
+            <div class="game-select-tagline">Wild Card Battles & Color Chaos</div>
+            <p class="game-select-description">
+              Match colors and numbers, stack Wild Draw 4s, reverse the turn order, and skip your rivals. Race to empty your hand and smash the UNO button first!
+            </p>
+            <div class="game-select-stats-bar">
+              <span>Your Uno Stats:</span>
+              <strong id="card-uno-record" style="color:#f87171;">0W / 0L</strong>
+            </div>
+            <div class="game-select-actions">
+              <button class="btn btn-danger btn-block btn-lg" id="btn-select-uno">
+                🃏 Enter Uno Party
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Overall Platform Stats Widget -->
+        <div class="profile-stats-card" style="margin-top:14px;">
           <div class="profile-stat-box">
             <div class="profile-stat-val" id="home-stat-wins">0</div>
-            <div class="profile-stat-lbl">Victories</div>
+            <div class="profile-stat-lbl">Total Wins</div>
           </div>
           <div class="profile-stat-box">
             <div class="profile-stat-val" id="home-stat-losses">0</div>
-            <div class="profile-stat-lbl">Defeats</div>
+            <div class="profile-stat-lbl">Total Losses</div>
           </div>
           <div class="profile-stat-box">
             <div class="profile-stat-val" id="home-stat-winrate">0%</div>
@@ -178,43 +244,29 @@
           </div>
         </div>
 
-        <!-- How It Works Quick Card -->
-        <div class="card-glass" style="padding:18px; margin-top:4px;">
-          <h3 style="margin-bottom:8px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
-            📖 The Rules at a Glance
-          </h3>
-          <div style="font-size:0.88rem; color:#cbd5e1; line-height:1.6; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
-            <div>
-              <strong>1. Fill 1 to 25:</strong> Arrange numbers 1 through 25 on your 5x5 board, or tap Auto-Fill.
-            </div>
-            <div>
-              <strong>2. Take Turns:</strong> On your turn, call any uncrossed number. It strikes out on <em>both</em> players' grids!
-            </div>
-            <div>
-              <strong>3. Cross B-I-N-G-O:</strong> Each completed row, column, or diagonal line crosses out the next letter in B-I-N-G-O.
-            </div>
-            <div>
-              <strong>4. Win:</strong> First player to cross all 5 letters reaches BINGO and wins the match!
-            </div>
-          </div>
-        </div>
-
       </div>
     </section>
 
     <!-- ======================================================================
-         VIEW 2: LOBBY (Multiplayer & Solo Selection)
+         VIEW 2: BINGO LOBBY (Multiplayer & Solo Selection)
          ====================================================================== -->
     <section id="view-lobby" class="view">
       <div class="lobby-hero">
-        <h2 style="font-size:1.8rem; font-weight:900; margin-bottom:6px;">Choose Game Mode</h2>
-        <p class="lobby-subtitle">Play solo or challenge your friends in a private room.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; width:100%; max-width:850px;">
+          <button class="btn btn-secondary btn-sm" id="btn-lobby-back">
+            ← Back to All Games
+          </button>
+          <span class="game-hub-badge badge-playable">🎲 Bingo Party</span>
+        </div>
+
+        <h2 style="font-size:1.8rem; font-weight:900; margin-bottom:6px;">Bingo Party Lobby</h2>
+        <p class="lobby-subtitle">Classic 1-25 pen & paper game. Play solo vs smart AI or challenge friends live:</p>
 
         <div class="lobby-grid">
           <!-- Solo Mode -->
           <div class="lobby-card">
             <h3 class="lobby-card-title">🤖 Play vs Computer</h3>
-            <p class="lobby-card-desc">Jump straight into a match against smart AI. Great for practice and climbing ranks.</p>
+            <p class="lobby-card-desc">Jump straight into a 1-25 match against smart AI. Great for practice and climbing ranks.</p>
             <div style="flex:1;"></div>
             <button class="btn btn-primary btn-block btn-lg" id="btn-lobby-bot">
               ⚡ Start Solo Match
@@ -243,6 +295,199 @@
             </button>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW: MALLU MONOPOLY GAME SCREEN
+         ====================================================================== -->
+    <section id="view-monopoly" class="view">
+      <div class="mono-game-container">
+        <!-- Top Navigation Bar -->
+        <div class="mono-top-bar">
+          <button class="btn btn-secondary btn-sm" id="btn-monopoly-back">
+            ← Back to All Games
+          </button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="mono-game-title-pill">🌴 Mallu Monopoly</span>
+            <button class="btn btn-secondary btn-sm" id="btn-mono-game-new-match" title="Start New Match">
+              ⚙️ Match Setup
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. SETUP / LOBBY SCREEN (Configuring 2-8 Players) -->
+        <div id="mono-view-setup" style="display:block;">
+          <!-- Saved Game Resumption Alert -->
+          <div class="mono-saved-game-alert" id="mono-saved-game-banner" style="display:none;">
+            <div>
+              <div style="font-weight:900; font-size:1rem; color:#f8fafc;">
+                ⚡ Unfinished Monopoly Match Found!
+              </div>
+              <div style="font-size:0.82rem; color:#bae6fd;">
+                Pick up your match right where you left off.
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-warning" id="btn-mono-resume-game">
+                ▶️ Resume Match
+              </button>
+              <button class="btn btn-secondary btn-sm" id="btn-mono-discard-save">
+                Discard
+              </button>
+            </div>
+          </div>
+
+          <div class="mono-setup-card">
+            <div class="mono-setup-hero">
+              <div class="mono-setup-hero-icon">🎩</div>
+              <h1 style="font-size:1.8rem; font-weight:900; margin-bottom:4px;">Monopoly: Kerala Edition</h1>
+              <p style="color:var(--text-muted); font-size:0.9rem;">
+                Nammude Swantham Real-Estate Board Game • ₹50,000 Scaled Economy
+              </p>
+            </div>
+
+            <!-- Player Setup Config -->
+            <div class="form-group" style="margin-bottom:14px;">
+              <label class="form-label">Number of Players (2 to 8)</label>
+              <select class="input-select" id="mono-player-count-select">
+                <option value="2">2 Players</option>
+                <option value="3">3 Players</option>
+                <option value="4" selected>4 Players (Recommended)</option>
+                <option value="5">5 Players</option>
+                <option value="6">6 Players</option>
+                <option value="7">7 Players</option>
+                <option value="8">8 Players</option>
+              </select>
+            </div>
+
+            <div class="mono-players-grid" id="mono-players-setup-container">
+              <!-- Rendered via JS -->
+            </div>
+
+            <div style="margin:20px 0 10px;">
+              <button class="btn btn-success btn-lg btn-block" id="btn-mono-start-game">
+                🚀 Launch Monopoly Match (₹15,000 Start)
+              </button>
+            </div>
+
+            <!-- Quick Rule Highlights -->
+            <div style="margin-top:20px; font-size:0.82rem; color:#94a3b8; line-height:1.6; border-top:1px solid var(--border-glass); padding-top:14px;">
+              <div style="font-weight:800; color:#e2e8f0; margin-bottom:4px;">🌴 Kerala Economy Highlights:</div>
+              • ₹15,000 Starting balance per player • Passing START awards ₹2,000 salary<br>
+              • 40 Spaces: Kasaragod, Malappuram, Kollam, Kozhikode, Fort Kochi, Munnar, Kochi & Kowdiar Palace<br>
+              • Transports: Southern Railway, Kochi Metro, SWTD Water Transport, Kerala Railways<br>
+              • Utilities: KSEB & Kerala Water Authority • Chance & Community Chest with Malayalam cinema dialogues!
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. GAME SCREEN (11x11 Grid Board & Controls) -->
+        <div id="mono-view-game" style="display:none;">
+          <!-- Board Wrapper -->
+          <div class="mono-board-wrapper">
+            <div class="mono-board-grid" id="mono-board-grid">
+
+              <!-- Center Board Control Hub (Rows 2 to 10, Cols 2 to 10) -->
+              <div class="mono-center-hub" id="mono-center-hub">
+
+                <!-- Malayalam Dialogue Banner -->
+                <div class="mono-dialogue-banner" id="monopoly-dialogue-banner">
+                  <div class="mono-dialogue-speaker" id="monopoly-dialogue-speaker">🌴 Kerala Dialogue</div>
+                  <div class="mono-dialogue-text" id="monopoly-dialogue-text">"Damu aada parayunne!"</div>
+                  <div class="mono-dialogue-sub" id="monopoly-dialogue-sub">🎬 Dashamoolam Damu</div>
+                </div>
+
+                <!-- Active Turn Player Banner -->
+                <div class="mono-active-player-banner" id="mono-active-player-banner">
+                  <!-- Rendered via JS -->
+                </div>
+
+                <!-- Animated 3D Dice Area -->
+                <div class="mono-dice-area">
+                  <div class="mono-dice-display" id="mono-dice-display">
+                    <div class="mono-die">⚀</div>
+                    <div class="mono-die">⚀</div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons Container -->
+                <div class="mono-actions-container" id="mono-actions-container">
+                  <!-- Rendered via JS -->
+                </div>
+
+                <!-- Live Activity Log Ticker -->
+                <div class="mono-activity-log" id="mono-activity-log">
+                  <div class="mono-log-entry">Match started. Roll dice to begin!</div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Players Dashboard Strip -->
+          <div class="mono-players-list" id="mono-players-list">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW: UNO PARTY GAME PORTAL
+         ====================================================================== -->
+    <section id="view-uno" class="view">
+      <div class="game-portal-container">
+        <div class="game-portal-top-bar">
+          <button class="btn btn-secondary btn-sm" id="btn-uno-back">
+            ← Back to All Games
+          </button>
+          <span class="game-portal-pill" style="background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#f87171;">
+            🃏 Uno Party
+          </span>
+        </div>
+
+        <div class="game-portal-hero uno-hero">
+          <div class="portal-hero-icon">🃏</div>
+          <h1 class="portal-hero-title">Uno Party</h1>
+          <div class="portal-hero-subtitle">Realtime Color & Action Card Battles</div>
+          <p class="portal-hero-desc">
+            Fast action cards, wild chaos, and the race to empty your hand!
+          </p>
+        </div>
+
+        <!-- Uno Card Deck Preview Showcase -->
+        <div class="card-glass" style="padding:20px; margin-bottom:20px; text-align:center;">
+          <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:14px;">
+            🃏 Action Deck Preview
+          </h3>
+          <div class="uno-cards-row">
+            <div class="uno-card-sample uno-red"><span>7</span></div>
+            <div class="uno-card-sample uno-blue"><span>🚫</span><small>Skip</small></div>
+            <div class="uno-card-sample uno-green"><span>⇄</span><small>Reverse</small></div>
+            <div class="uno-card-sample uno-yellow"><span>+2</span></div>
+            <div class="uno-card-sample uno-wild"><span>🌈</span><small>+4 Wild</small></div>
+          </div>
+        </div>
+
+        <!-- Waiting for Rules Callout -->
+        <div class="rules-callout-card" style="background:linear-gradient(135deg, rgba(185,28,28,0.25), rgba(245,158,11,0.2)); border:2px solid #ef4444; border-radius:16px; padding:22px; text-align:center;">
+          <div style="font-size:2.2rem; margin-bottom:8px;">⚡</div>
+          <h3 style="font-size:1.3rem; font-weight:900; color:#f87171; margin-bottom:6px;">
+            Ready for Your Custom Uno Rules!
+          </h3>
+          <p style="color:#cbd5e1; font-size:0.92rem; max-width:650px; margin:0 auto 16px; line-height:1.6;">
+            The multiplayer turn engine, room codes, and stats schema (<code>user.games.uno</code>) are active. Share your house rules (e.g. Stacking +2/+4, 7-0 Hand Swap, Jump-in) to unleash the live deck!
+          </p>
+          <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-lg" onclick="window.bingoApp.switchView('home')">
+              ← Return to Games Menu
+            </button>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -380,11 +625,19 @@
         <div class="leaderboard-header">
           <div>
             <h2 style="font-size:1.6rem; font-weight:900;">🏆 Player Leaderboard</h2>
-            <p style="color:var(--text-muted); font-size:0.85rem;">Rankings based on total victories and win rate.</p>
+            <p style="color:var(--text-muted); font-size:0.85rem;">Rankings based on total victories and win rate across PartyPlay games.</p>
           </div>
           <button class="btn btn-primary" id="btn-leaderboard-play" style="font-size:0.85rem; padding:8px 14px;">
             🎮 Play & Rank Up
           </button>
+        </div>
+
+        <!-- Multi-Game Leaderboard Filter Tabs -->
+        <div class="leaderboard-filter-bar" id="leaderboard-filter-bar">
+          <button class="game-filter-tab active" data-leaderboard-filter="all">🌐 All Games</button>
+          <button class="game-filter-tab" data-leaderboard-filter="bingo">🎲 Bingoparty</button>
+          <button class="game-filter-tab" data-leaderboard-filter="monopoly">🎩 Mallu Monopoly</button>
+          <button class="game-filter-tab" data-leaderboard-filter="uno">🃏 Uno Party</button>
         </div>
 
         <div class="leaderboard-table-card">
@@ -416,8 +669,16 @@
         <div class="leaderboard-header">
           <div>
             <h2 style="font-size:1.6rem; font-weight:900;">📜 Match History & Dates</h2>
-            <p style="color:var(--text-muted); font-size:0.85rem;">Every game you played with exact timestamps and outcomes.</p>
+            <p style="color:var(--text-muted); font-size:0.85rem;">Every game you played with exact timestamps, opponents, and outcomes.</p>
           </div>
+        </div>
+
+        <!-- History Game Filter Bar -->
+        <div class="leaderboard-filter-bar" id="history-filter-bar">
+          <button class="history-filter-tab active" data-history-filter="all">🌐 All Games</button>
+          <button class="history-filter-tab" data-history-filter="bingo">🎲 Bingoparty</button>
+          <button class="history-filter-tab" data-history-filter="monopoly">🎩 Mallu Monopoly</button>
+          <button class="history-filter-tab" data-history-filter="uno">🃏 Uno Party</button>
         </div>
 
         <div class="history-feed" id="history-feed-container">
@@ -434,11 +695,11 @@
   <nav class="mobile-bottom-nav">
     <button class="mobile-nav-btn active" data-nav="home">
       <span class="mobile-nav-icon">🏠</span>
-      <span>Home</span>
+      <span>Hub</span>
     </button>
     <button class="mobile-nav-btn" data-nav="lobby">
-      <span class="mobile-nav-icon">🎮</span>
-      <span>Play</span>
+      <span class="mobile-nav-icon">🎲</span>
+      <span>Bingo</span>
     </button>
     <button class="mobile-nav-btn" data-nav="leaderboard">
       <span class="mobile-nav-icon">🏆</span>
@@ -461,10 +722,10 @@
   <!-- 1. WELCOME ENTRY GATE MODAL -->
   <div class="modal-overlay" id="modal-welcome-gate">
     <div class="modal-content entry-gate-card">
-      <div style="font-size:2.8rem; margin-bottom:4px;">🎲</div>
-      <h2 style="font-size:1.5rem; font-weight:900; margin-bottom:4px;">Welcome to BINGO Party!</h2>
+      <div style="font-size:2.8rem; margin-bottom:4px;">🎮</div>
+      <h2 style="font-size:1.5rem; font-weight:900; margin-bottom:4px;">Welcome to PartyPlay Hub!</h2>
       <p style="color:var(--text-muted); font-size:0.85rem;">
-        Choose how you would like to play today:
+        Play classic tabletop games with friends. Choose how you'd like to enter:
       </p>
 
       <div class="entry-options-list">
@@ -473,7 +734,7 @@
           <span class="entry-option-icon">👤</span>
           <div>
             <div class="entry-option-title">Play as Guest</div>
-            <div class="entry-option-desc">Quick jump into the game with a temporary nickname. No PIN required.</div>
+            <div class="entry-option-desc">Quick jump into any game with a temporary nickname. No PIN required.</div>
           </div>
         </div>
 
@@ -482,7 +743,7 @@
           <span class="entry-option-icon">🔑</span>
           <div>
             <div class="entry-option-title">Log In</div>
-            <div class="entry-option-desc">Sign into your existing account with username & PIN to access your rank.</div>
+            <div class="entry-option-desc">Sign into your account with username & PIN to access your multi-game rank.</div>
           </div>
         </div>
 
@@ -491,7 +752,7 @@
           <span class="entry-option-icon">✨</span>
           <div>
             <div class="entry-option-title">Create Account</div>
-            <div class="entry-option-desc">Save your stats, climb the leaderboard, and unlock custom avatars.</div>
+            <div class="entry-option-desc">Save your stats across all games, climb leaderboards, and customize avatars.</div>
           </div>
         </div>
       </div>
@@ -528,18 +789,39 @@
         <span class="profile-account-type-badge badge-registered" id="modal-profile-badge">Registered Player</span>
       </div>
 
-      <div class="profile-stats-card" style="margin-bottom:16px;">
+      <div class="profile-stats-card" style="margin-bottom:12px;">
         <div class="profile-stat-box">
           <div class="profile-stat-val" id="profile-modal-wins">0</div>
-          <div class="profile-stat-lbl">Wins</div>
+          <div class="profile-stat-lbl">Total Wins</div>
         </div>
         <div class="profile-stat-box">
           <div class="profile-stat-val" id="profile-modal-losses">0</div>
-          <div class="profile-stat-lbl">Losses</div>
+          <div class="profile-stat-lbl">Total Losses</div>
         </div>
         <div class="profile-stat-box">
           <div class="profile-stat-val streak" id="profile-modal-streak">🔥 0</div>
           <div class="profile-stat-lbl">Streak</div>
+        </div>
+      </div>
+
+      <!-- Per-Game Stats Breakdown -->
+      <div class="profile-games-breakdown" style="background:rgba(255,255,255,0.04); border:1px solid var(--border-glass); border-radius:12px; padding:12px; margin-bottom:14px; text-align:left;">
+        <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
+          🎮 Stats by Game
+        </div>
+        <div style="display:flex; flex-direction:column; gap:7px; font-size:0.86rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>🎲 Bingoparty:</span>
+            <strong id="profile-game-bingo" style="color:#f59e0b;">0W / 0L</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>🎩 Mallu Monopoly:</span>
+            <strong id="profile-game-monopoly" style="color:#34d399;">0W / 0L</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>🃏 Uno Party:</span>
+            <strong id="profile-game-uno" style="color:#ef4444;">0W / 0L</strong>
+          </div>
         </div>
       </div>
 
@@ -556,6 +838,25 @@
       <!-- Sign Out Button -->
       <button class="btn btn-danger btn-block btn-lg" id="btn-modal-signout">
         🚪 Sign Out
+      </button>
+    </div>
+  </div>
+
+  <!-- UPCOMING GAME PREVIEW & RULES MODAL -->
+  <div class="modal-overlay" id="modal-game-preview">
+    <div class="modal-content" style="text-align:center;">
+      <button class="modal-close" data-close-modal>&times;</button>
+      <div style="font-size:3rem; margin-bottom:8px;" id="preview-game-icon">🎩</div>
+      <h3 style="font-size:1.4rem; font-weight:900;" id="preview-game-title">Mallu Monopoly</h3>
+      <div class="profile-account-type-badge badge-guest" id="preview-game-status" style="margin:6px auto 14px; display:inline-block;">In Development</div>
+      <p style="color:#cbd5e1; font-size:0.9rem; line-height:1.6; text-align:left; background:rgba(255,255,255,0.04); border:1px solid var(--border-glass); border-radius:10px; padding:12px;" id="preview-game-desc">
+        Details loading...
+      </p>
+      <div style="margin-top:14px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); border-radius:10px; padding:10px; font-size:0.82rem; color:#bae6fd; text-align:left;">
+        💡 <strong>Developer Note:</strong> This game container and its stats namespace are pre-configured in PartyPlay Hub. Once your custom rules and board layout are provided, the interactive gameplay will launch right here!
+      </div>
+      <button class="btn btn-secondary btn-block" style="margin-top:16px;" data-close-modal>
+        Got it!
       </button>
     </div>
   </div>
@@ -713,13 +1014,103 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Versioned Scripts for Clean Cache Busting -->
-  <script src="js/confetti.js?v=3.2.1"></script>
-  <script src="js/qrcode-lib.js?v=3.2.1"></script>
-  <script src="js/audio.js?v=3.2.1"></script>
-  <script src="js/bingo-logic.js?v=3.2.1"></script>
-  <script src="js/auth-storage.js?v=3.2.1"></script>
-  <script src="js/multiplayer.js?v=3.2.1"></script>
-  <script src="js/app.js?v=3.2.1"></script>
+  <script src="js/confetti.js?v=4.0.0"></script>
+  <script src="js/qrcode-lib.js?v=4.0.0"></script>
+  <script src="js/audio.js?v=4.0.0"></script>
+  <script src="js/bingo-logic.js?v=4.0.0"></script>
+  <script src="js/auth-storage.js?v=4.0.0"></script>
+  <script src="js/multiplayer.js?v=4.0.0"></script>
+  <script src="js/monopoly-config.js?v=4.0.0"></script>
+  <script src="js/monopoly-audio.js?v=4.0.0"></script>
+  <script src="js/monopoly-engine.js?v=4.0.0"></script>
+  <script src="js/monopoly-ui.js?v=4.0.0"></script>
+  <script src="js/app.js?v=4.0.0"></script>
+
+  <!-- ======================================================================
+       MALLU MONOPOLY MODALS
+       ====================================================================== -->
+
+  <!-- 1. Property Deed Inspector & Build Modal -->
+  <div class="modal-overlay" id="modal-mono-deed">
+    <div class="modal-content mono-deed-card">
+      <button class="modal-close" data-close-mono-modal>&times;</button>
+      <div class="mono-deed-header" id="mono-deed-header">
+        <!-- Rendered via JS -->
+      </div>
+      <div class="mono-deed-body" id="mono-deed-body">
+        <!-- Rendered via JS -->
+      </div>
+      <div style="display:flex; justify-content:center; gap:8px; padding:0 16px 16px;" id="mono-deed-actions">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Player Trading Modal -->
+  <div class="modal-overlay" id="modal-mono-trade">
+    <div class="modal-content" style="max-width:540px;">
+      <button class="modal-close" data-close-mono-modal>&times;</button>
+      <h3 style="font-size:1.3rem; font-weight:900; margin-bottom:4px; text-align:center;">🤝 Propose Asset Trade</h3>
+      <p style="color:var(--text-muted); font-size:0.82rem; text-align:center; margin-bottom:12px;">
+        Exchange properties, cash, and jail bail letters with any player.
+      </p>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Trade With:</label>
+        <select class="input-select" id="mono-trade-target-select"></select>
+      </div>
+
+      <div class="mono-trade-grid">
+        <div class="mono-trade-col">
+          <div style="font-weight:800; font-size:0.85rem; color:#38bdf8;">Your Offer:</div>
+          <div style="margin:6px 0;">
+            <label style="font-size:0.75rem; color:var(--text-muted);">Cash (₹):</label>
+            <input type="number" id="mono-trade-p1-cash" class="input-text" placeholder="0" min="0" step="50" style="padding:4px 8px; font-size:0.85rem;">
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">Select Properties to Give:</div>
+          <div class="mono-trade-props-box" id="mono-trade-p1-props"></div>
+        </div>
+
+        <div class="mono-trade-col">
+          <div style="font-weight:800; font-size:0.85rem; color:#34d399;">Their Assets (Requested):</div>
+          <div style="margin:6px 0;">
+            <label style="font-size:0.75rem; color:var(--text-muted);">Cash (₹):</label>
+            <input type="number" id="mono-trade-p2-cash" class="input-text" placeholder="0" min="0" step="50" style="padding:4px 8px; font-size:0.85rem;">
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">Select Properties to Receive:</div>
+          <div class="mono-trade-props-box" id="mono-trade-p2-props"></div>
+        </div>
+      </div>
+
+      <button class="btn btn-success btn-block btn-lg" id="btn-submit-trade-offer" style="margin-top:12px;">
+        🤝 Submit Trade Deal
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. Monopoly Winner Celebration Modal -->
+  <div class="modal-overlay" id="modal-mono-winner">
+    <div class="modal-content" style="text-align:center; max-width:440px;">
+      <button class="modal-close" data-close-mono-modal>&times;</button>
+      <div style="font-size:3.5rem; margin-bottom:4px;">👑</div>
+      <h2 style="font-size:1.6rem; color:#f59e0b; font-weight:900; letter-spacing:1px; margin-bottom:4px;">
+        KERALA MONOPOLY KING!
+      </h2>
+      <div style="font-size:1.35rem; font-weight:900; color:#ffffff; margin-bottom:8px;" id="mono-winner-name">
+        Winner Name
+      </div>
+      <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:14px;">
+        All rivals bankrupted! Crowned the wealthiest business magnate of Kerala!
+      </p>
+      <div style="background:rgba(255,255,255,0.05); border:1px solid var(--border-glass); border-radius:12px; padding:12px; margin-bottom:18px;">
+        <div style="font-size:0.8rem; color:#94a3b8;">Final Total Net Worth:</div>
+        <div style="font-size:1.6rem; font-weight:900; color:#34d399;" id="mono-winner-networth">₹0</div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="location.reload()">
+        🔄 Play Another Match
+      </button>
+    </div>
+  </div>
 
 </body>
 </html>

@@ -1,6 +1,7 @@
 /**
- * User Authentication, Game State Persistence, and Leaderboard Storage
- * Preserves all user data across versions with zero accidental wiping.
+ * User Authentication, Game State Persistence, and Multi-Game Hub Leaderboard
+ * Organizes stats by game (username > game name > wins, losses, streak, history)
+ * while preserving 100% of existing user data and backward compatibility.
  */
 class BingoAuthStorage {
   constructor() {
@@ -8,11 +9,78 @@ class BingoAuthStorage {
     this.STORAGE_KEY_CURRENT = 'bingo_current_user_v3';
     this.STORAGE_KEY_GUEST = 'bingo_guest_user_v3';
     this.STORAGE_KEY_ACTIVE_GAME = 'bingo_active_saved_game_v3';
-    this.STORAGE_KEY_VER = 'bingo_app_version_v3';
+    this.STORAGE_KEY_VER = 'partyplay_app_version_v1';
 
     this.currentUser = null;
     this.restoreAndMigrateUserData();
     this.loadCurrentUser();
+  }
+
+  // Helper to ensure user has games dictionary with bingo, monopoly, uno
+  ensureUserGamesStructure(u) {
+    if (!u) return u;
+    u.games = u.games || {};
+
+    // 1. Bingo stats migration (preserve existing wins/losses/streak)
+    if (!u.games.bingo) {
+      u.games.bingo = {
+        wins: (u.stats && typeof u.stats.wins === 'number') ? u.stats.wins : 0,
+        losses: (u.stats && typeof u.stats.losses === 'number') ? u.stats.losses : 0,
+        streak: (u.stats && typeof u.stats.streak === 'number') ? u.stats.streak : 0,
+        totalLines: (u.stats && typeof u.stats.totalLines === 'number') ? u.stats.totalLines : 0,
+        history: Array.isArray(u.history) ? [...u.history] : []
+      };
+    } else {
+      u.games.bingo.wins = u.games.bingo.wins || 0;
+      u.games.bingo.losses = u.games.bingo.losses || 0;
+      u.games.bingo.streak = u.games.bingo.streak || 0;
+      u.games.bingo.totalLines = u.games.bingo.totalLines || 0;
+      u.games.bingo.history = Array.isArray(u.games.bingo.history) ? u.games.bingo.history : [];
+    }
+
+    // 2. Monopoly container
+    if (!u.games.monopoly) {
+      u.games.monopoly = {
+        wins: 0,
+        losses: 0,
+        streak: 0,
+        history: []
+      };
+    } else {
+      u.games.monopoly.wins = u.games.monopoly.wins || 0;
+      u.games.monopoly.losses = u.games.monopoly.losses || 0;
+      u.games.monopoly.streak = u.games.monopoly.streak || 0;
+      u.games.monopoly.history = Array.isArray(u.games.monopoly.history) ? u.games.monopoly.history : [];
+    }
+
+    // 3. Uno container
+    if (!u.games.uno) {
+      u.games.uno = {
+        wins: 0,
+        losses: 0,
+        streak: 0,
+        history: []
+      };
+    } else {
+      u.games.uno.wins = u.games.uno.wins || 0;
+      u.games.uno.losses = u.games.uno.losses || 0;
+      u.games.uno.streak = u.games.uno.streak || 0;
+      u.games.uno.history = Array.isArray(u.games.uno.history) ? u.games.uno.history : [];
+    }
+
+    // Backward compatibility for root stats & history
+    if (!u.stats) {
+      u.stats = {
+        wins: u.games.bingo.wins,
+        losses: u.games.bingo.losses,
+        streak: u.games.bingo.streak,
+        totalLines: u.games.bingo.totalLines
+      };
+    }
+    if (!Array.isArray(u.history)) {
+      u.history = [...u.games.bingo.history];
+    }
+    return u;
   }
 
   // Restores and migrates all user accounts across previous versions so NO user data is ever lost
@@ -181,12 +249,18 @@ class BingoAuthStorage {
       }
     });
 
+    // Structure every user account with game-specific buckets (username > game name > stats)
+    Object.keys(mergedUsers).forEach(k => {
+      mergedUsers[k] = this.ensureUserGamesStructure(mergedUsers[k]);
+    });
+
     // Persist to storage across versions so data is safe and synchronized
     this.saveUsers(mergedUsers);
     try {
       localStorage.setItem('bingo_users_db_v1', JSON.stringify(mergedUsers));
       localStorage.setItem('bingo_users_db_v2', JSON.stringify(mergedUsers));
       localStorage.setItem('bingo_users_db_v3', JSON.stringify(mergedUsers));
+      localStorage.setItem('partyplay_users_db_v1', JSON.stringify(mergedUsers));
     } catch (e) {}
 
     // 3. Recover active user session
@@ -195,6 +269,7 @@ class BingoAuthStorage {
       'bingo_current_user_v3',
       'bingo_current_user_v2',
       'bingo_current_user_v1',
+      'partyplay_current_user_v1',
       'bingo_player_name',
       'bingo_paper_name'
     ];
@@ -210,7 +285,7 @@ class BingoAuthStorage {
     if (recoveredName) {
       const recKey = recoveredName.toLowerCase();
       if (!mergedUsers[recKey]) {
-        mergedUsers[recKey] = {
+        mergedUsers[recKey] = this.ensureUserGamesStructure({
           username: recoveredName,
           pin: '1234',
           avatar: '🦊',
@@ -218,17 +293,18 @@ class BingoAuthStorage {
           createdAt: new Date().toISOString(),
           stats: { wins: 5, losses: 1, streak: 2, totalLines: 28 },
           history: []
-        };
+        });
         this.saveUsers(mergedUsers);
       }
-      this.currentUser = mergedUsers[recKey];
+      this.currentUser = this.ensureUserGamesStructure(mergedUsers[recKey]);
       localStorage.setItem(this.STORAGE_KEY_CURRENT, this.currentUser.username);
     } else {
       // Check saved guest user
       const guestCandidates = [
         this.STORAGE_KEY_GUEST,
         'bingo_guest_user_v3',
-        'bingo_guest_user_v2'
+        'bingo_guest_user_v2',
+        'partyplay_guest_user_v1'
       ];
       for (const gk of guestCandidates) {
         try {
@@ -236,8 +312,8 @@ class BingoAuthStorage {
           if (raw) {
             const parsed = JSON.parse(raw);
             if (parsed && parsed.username) {
-              this.currentUser = parsed;
-              localStorage.setItem(this.STORAGE_KEY_GUEST, JSON.stringify(parsed));
+              this.currentUser = this.ensureUserGamesStructure(parsed);
+              localStorage.setItem(this.STORAGE_KEY_GUEST, JSON.stringify(this.currentUser));
               break;
             }
           }
@@ -249,7 +325,11 @@ class BingoAuthStorage {
   getAllUsers() {
     try {
       const data = localStorage.getItem(this.STORAGE_KEY_USERS);
-      return data ? JSON.parse(data) : {};
+      const parsed = data ? JSON.parse(data) : {};
+      Object.keys(parsed).forEach(k => {
+        parsed[k] = this.ensureUserGamesStructure(parsed[k]);
+      });
+      return parsed;
     } catch (e) {
       return {};
     }
@@ -257,6 +337,9 @@ class BingoAuthStorage {
 
   saveUsers(users) {
     localStorage.setItem(this.STORAGE_KEY_USERS, JSON.stringify(users));
+    try {
+      localStorage.setItem('partyplay_users_db_v1', JSON.stringify(users));
+    } catch (e) {}
   }
 
   loadCurrentUser() {
@@ -265,7 +348,7 @@ class BingoAuthStorage {
     if (username) {
       const users = this.getAllUsers();
       if (users[username.toLowerCase()]) {
-        this.currentUser = users[username.toLowerCase()];
+        this.currentUser = this.ensureUserGamesStructure(users[username.toLowerCase()]);
         return this.currentUser;
       }
     }
@@ -274,7 +357,7 @@ class BingoAuthStorage {
     try {
       const guestData = localStorage.getItem(this.STORAGE_KEY_GUEST);
       if (guestData) {
-        this.currentUser = JSON.parse(guestData);
+        this.currentUser = this.ensureUserGamesStructure(JSON.parse(guestData));
         return this.currentUser;
       }
     } catch (e) {}
@@ -291,14 +374,14 @@ class BingoAuthStorage {
   // Play as Guest (no password required)
   playAsGuest(nickname = '') {
     const name = (nickname || '').trim() || 'Guest_' + Math.floor(100 + Math.random() * 900);
-    this.currentUser = {
+    this.currentUser = this.ensureUserGamesStructure({
       username: name,
       isGuest: true,
       avatar: '👤',
       createdAt: new Date().toISOString(),
       stats: { wins: 0, losses: 0, streak: 0, totalLines: 0 },
       history: []
-    };
+    });
     localStorage.setItem(this.STORAGE_KEY_GUEST, JSON.stringify(this.currentUser));
     localStorage.removeItem(this.STORAGE_KEY_CURRENT);
     return { success: true, user: this.currentUser };
@@ -321,7 +404,7 @@ class BingoAuthStorage {
     );
 
     if (matchKey && users[matchKey]) {
-      const u = users[matchKey];
+      const u = this.ensureUserGamesStructure(users[matchKey]);
       // Verify PIN if user has a custom non-default PIN and input doesn't match
       if (u.pin && cleanPin && u.pin !== cleanPin && cleanPin !== '1234' && u.pin !== '1234') {
         return { success: false, error: 'Incorrect PIN / Password.' };
@@ -333,8 +416,7 @@ class BingoAuthStorage {
     }
 
     // 2. Not found in existing users? Automatically create account immediately!
-    // Never block user with "User not found"!
-    const newUser = {
+    const newUser = this.ensureUserGamesStructure({
       username: raw,
       pin: cleanPin,
       avatar: '🦊',
@@ -342,7 +424,7 @@ class BingoAuthStorage {
       createdAt: new Date().toISOString(),
       stats: { wins: 0, losses: 0, streak: 0, totalLines: 0 },
       history: []
-    };
+    });
 
     users[key] = newUser;
     this.saveUsers(users);
@@ -350,6 +432,7 @@ class BingoAuthStorage {
       localStorage.setItem('bingo_users_db_v1', JSON.stringify(users));
       localStorage.setItem('bingo_users_db_v2', JSON.stringify(users));
       localStorage.setItem('bingo_users_db_v3', JSON.stringify(users));
+      localStorage.setItem('partyplay_users_db_v1', JSON.stringify(users));
     } catch (e) {}
 
     this.currentUser = newUser;
@@ -376,7 +459,7 @@ class BingoAuthStorage {
     );
 
     if (matchKey && users[matchKey]) {
-      const existing = users[matchKey];
+      const existing = this.ensureUserGamesStructure(users[matchKey]);
       if (!existing.pin || existing.pin === cleanPin || cleanPin === '1234' || existing.pin === '1234') {
         this.currentUser = existing;
         localStorage.setItem(this.STORAGE_KEY_CURRENT, this.currentUser.username);
@@ -388,20 +471,25 @@ class BingoAuthStorage {
 
     let existingStats = { wins: 0, losses: 0, streak: 0, totalLines: 0 };
     let existingHistory = [];
+    let existingGames = null;
     if (this.currentUser && this.currentUser.isGuest) {
       existingStats = { ...this.currentUser.stats };
       existingHistory = [...(this.currentUser.history || [])];
+      if (this.currentUser.games) {
+        existingGames = JSON.parse(JSON.stringify(this.currentUser.games));
+      }
     }
 
-    const newUser = {
+    const newUser = this.ensureUserGamesStructure({
       username: trimmed,
       pin: cleanPin,
       avatar: avatar || '🦊',
       isGuest: false,
       createdAt: new Date().toISOString(),
+      games: existingGames || undefined,
       stats: existingStats,
       history: existingHistory
-    };
+    });
 
     users[key] = newUser;
     this.saveUsers(users);
@@ -409,6 +497,7 @@ class BingoAuthStorage {
       localStorage.setItem('bingo_users_db_v1', JSON.stringify(users));
       localStorage.setItem('bingo_users_db_v2', JSON.stringify(users));
       localStorage.setItem('bingo_users_db_v3', JSON.stringify(users));
+      localStorage.setItem('partyplay_users_db_v1', JSON.stringify(users));
     } catch (e) {}
 
     this.currentUser = newUser;
@@ -438,13 +527,19 @@ class BingoAuthStorage {
     });
   }
 
-  // Record completed match to user's history with date & time
-  recordMatchResult({ opponent, mode, result, myLines, opponentLines, turns, myBoard, calledNumbers }) {
+  // Record completed match to user's history with date & time under specific game
+  recordMatchResult({ gameId = 'bingo', opponent, mode, result, myLines, opponentLines, turns, myBoard, calledNumbers, details }) {
     if (!this.currentUser) return;
+
+    this.currentUser = this.ensureUserGamesStructure(this.currentUser);
+    const gameKey = (gameId || 'bingo').toLowerCase();
+    const gameData = this.currentUser.games[gameKey] || { wins: 0, losses: 0, streak: 0, totalLines: 0, history: [] };
+    this.currentUser.games[gameKey] = gameData;
 
     const now = new Date();
     const matchRecord = {
       id: 'match_' + Date.now(),
+      gameId: gameKey,
       date: now.toISOString(),
       formattedDate: this.formatDate(now),
       opponent: opponent || 'Opponent',
@@ -454,9 +549,26 @@ class BingoAuthStorage {
       opponentLines: opponentLines || 0,
       turns: turns || 0,
       myBoard: myBoard ? [...myBoard] : [],
-      calledNumbers: calledNumbers ? Array.from(calledNumbers) : []
+      calledNumbers: calledNumbers ? Array.from(calledNumbers) : [],
+      details: details || {}
     };
 
+    // 1. Update Game-Specific Stats (username > game name > wins/losses/streak)
+    if (result === 'WON') {
+      gameData.wins = (gameData.wins || 0) + 1;
+      gameData.streak = (gameData.streak || 0) + 1;
+    } else if (result === 'LOST') {
+      gameData.losses = (gameData.losses || 0) + 1;
+      gameData.streak = 0;
+    }
+    if (typeof myLines === 'number') {
+      gameData.totalLines = (gameData.totalLines || 0) + myLines;
+    }
+    gameData.history = Array.isArray(gameData.history) ? gameData.history : [];
+    gameData.history.unshift(matchRecord);
+    if (gameData.history.length > 50) gameData.history.pop();
+
+    // 2. Backward Compatibility & Global Totals (root stats & history)
     const stats = this.currentUser.stats || { wins: 0, losses: 0, streak: 0, totalLines: 0 };
     if (result === 'WON') {
       stats.wins += 1;
@@ -465,16 +577,15 @@ class BingoAuthStorage {
       stats.losses += 1;
       stats.streak = 0;
     }
-    stats.totalLines += (myLines || 0);
-
-    this.currentUser.stats = stats;
-    if (!this.currentUser.history) this.currentUser.history = [];
-    this.currentUser.history.unshift(matchRecord);
-
-    if (this.currentUser.history.length > 50) {
-      this.currentUser.history.pop();
+    if (typeof myLines === 'number') {
+      stats.totalLines = (stats.totalLines || 0) + myLines;
     }
+    this.currentUser.stats = stats;
+    if (!Array.isArray(this.currentUser.history)) this.currentUser.history = [];
+    this.currentUser.history.unshift(matchRecord);
+    if (this.currentUser.history.length > 50) this.currentUser.history.pop();
 
+    // 3. Persist to storage
     if (this.currentUser.isGuest) {
       localStorage.setItem(this.STORAGE_KEY_GUEST, JSON.stringify(this.currentUser));
     } else {
@@ -493,6 +604,7 @@ class BingoAuthStorage {
     try {
       const payload = {
         userId: this.currentUser.username,
+        gameId: gameState.gameId || 'bingo',
         isGuest: !!this.currentUser.isGuest,
         savedAt: new Date().toISOString(),
         formattedDate: this.formatDate(new Date()),
@@ -503,7 +615,7 @@ class BingoAuthStorage {
         opponentLinesCount: gameState.opponentLinesCount,
         gameBoard: gameState.gameBoard,
         botBoard: gameState.botBoard,
-        calledNumbers: Array.from(gameState.calledNumbers)
+        calledNumbers: gameState.calledNumbers ? Array.from(gameState.calledNumbers) : []
       };
       localStorage.setItem(this.STORAGE_KEY_ACTIVE_GAME, JSON.stringify(payload));
     } catch (e) {
@@ -529,15 +641,54 @@ class BingoAuthStorage {
     localStorage.removeItem(this.STORAGE_KEY_ACTIVE_GAME);
   }
 
-  getLeaderboard() {
+  // Multi-Game Leaderboard: supports 'all' (Hub global) or specific game ('bingo', 'monopoly', 'uno')
+  getLeaderboard(gameFilter = 'all') {
     const users = this.getAllUsers();
+    const filterKey = (gameFilter || 'all').toLowerCase();
+
     const list = Object.values(users).map(u => {
-      const wins = u.stats?.wins || 0;
-      const losses = u.stats?.losses || 0;
+      this.ensureUserGamesStructure(u);
+
+      let wins = 0;
+      let losses = 0;
+      let streak = 0;
+      let totalLines = 0;
+
+      if (filterKey === 'all') {
+        // Aggregate totals across all games
+        Object.keys(u.games || {}).forEach(gk => {
+          const g = u.games[gk];
+          if (g) {
+            wins += (g.wins || 0);
+            losses += (g.losses || 0);
+            totalLines += (g.totalLines || 0);
+          }
+        });
+        if (wins === 0 && losses === 0 && u.stats) {
+          wins = u.stats.wins || 0;
+          losses = u.stats.losses || 0;
+          streak = u.stats.streak || 0;
+          totalLines = u.stats.totalLines || 0;
+        } else {
+          streak = u.stats?.streak || 0;
+        }
+      } else {
+        const g = (u.games && u.games[filterKey]) ? u.games[filterKey] : null;
+        if (g) {
+          wins = g.wins || 0;
+          losses = g.losses || 0;
+          streak = g.streak || 0;
+          totalLines = g.totalLines || 0;
+        } else if (filterKey === 'bingo' && u.stats) {
+          wins = u.stats.wins || 0;
+          losses = u.stats.losses || 0;
+          streak = u.stats.streak || 0;
+          totalLines = u.stats.totalLines || 0;
+        }
+      }
+
       const totalGames = wins + losses;
       const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
-      const streak = u.stats?.streak || 0;
-      const totalLines = u.stats?.totalLines || 0;
 
       let rankTitle = 'Novice';
       if (wins >= 25) rankTitle = 'Legend 👑';
@@ -549,33 +700,64 @@ class BingoAuthStorage {
         username: u.username,
         avatar: u.avatar || '👤',
         isGuest: !!u.isGuest,
+        gameFilter: filterKey,
         wins: wins,
         losses: losses,
         totalGames: totalGames,
         winRate: winRate,
         streak: streak,
         totalLines: totalLines,
-        rankTitle: rankTitle
+        rankTitle: rankTitle,
+        gamesBreakdown: u.games || {}
       };
     });
 
-    if (this.currentUser && this.currentUser.isGuest && (this.currentUser.stats.wins > 0 || this.currentUser.stats.losses > 0)) {
-      const gWins = this.currentUser.stats.wins;
-      const gLosses = this.currentUser.stats.losses;
-      const gTotal = gWins + gLosses;
-      const gRate = gTotal > 0 ? Math.round((gWins / gTotal) * 100) : 0;
-      list.push({
-        username: this.currentUser.username + ' (Guest)',
-        avatar: '👤',
-        isGuest: true,
-        wins: gWins,
-        losses: gLosses,
-        totalGames: gTotal,
-        winRate: gRate,
-        streak: this.currentUser.stats.streak,
-        totalLines: this.currentUser.stats.totalLines,
-        rankTitle: 'Guest Player'
-      });
+    if (this.currentUser && this.currentUser.isGuest) {
+      this.ensureUserGamesStructure(this.currentUser);
+      let gWins = 0, gLosses = 0, gStreak = 0, gLines = 0;
+
+      if (filterKey === 'all') {
+        Object.keys(this.currentUser.games || {}).forEach(gk => {
+          const g = this.currentUser.games[gk];
+          if (g) {
+            gWins += (g.wins || 0);
+            gLosses += (g.losses || 0);
+            gLines += (g.totalLines || 0);
+          }
+        });
+        if (gWins === 0 && gLosses === 0 && this.currentUser.stats) {
+          gWins = this.currentUser.stats.wins || 0;
+          gLosses = this.currentUser.stats.losses || 0;
+          gStreak = this.currentUser.stats.streak || 0;
+        }
+      } else {
+        const g = (this.currentUser.games && this.currentUser.games[filterKey]) ? this.currentUser.games[filterKey] : null;
+        if (g) {
+          gWins = g.wins || 0;
+          gLosses = g.losses || 0;
+          gStreak = g.streak || 0;
+          gLines = g.totalLines || 0;
+        }
+      }
+
+      if (gWins > 0 || gLosses > 0) {
+        const gTotal = gWins + gLosses;
+        const gRate = gTotal > 0 ? Math.round((gWins / gTotal) * 100) : 0;
+        list.push({
+          username: this.currentUser.username + ' (Guest)',
+          avatar: '👤',
+          isGuest: true,
+          gameFilter: filterKey,
+          wins: gWins,
+          losses: gLosses,
+          totalGames: gTotal,
+          winRate: gRate,
+          streak: gStreak,
+          totalLines: gLines,
+          rankTitle: 'Guest Player',
+          gamesBreakdown: this.currentUser.games || {}
+        });
+      }
     }
 
     list.sort((a, b) => {
@@ -585,33 +767,55 @@ class BingoAuthStorage {
 
     return list;
   }
+
+  // Helper to query user game stats
+  getUserGameStats(username, gameId = 'bingo') {
+    const key = (username || '').toLowerCase().trim();
+    const users = this.getAllUsers();
+    const u = users[key] || (this.currentUser && this.currentUser.username.toLowerCase() === key ? this.currentUser : null);
+    if (!u) return { wins: 0, losses: 0, streak: 0, totalLines: 0, winRate: 0 };
+    this.ensureUserGamesStructure(u);
+    const g = (u.games && u.games[gameId]) ? u.games[gameId] : { wins: 0, losses: 0, streak: 0, totalLines: 0 };
+    const total = (g.wins || 0) + (g.losses || 0);
+    return {
+      wins: g.wins || 0,
+      losses: g.losses || 0,
+      streak: g.streak || 0,
+      totalLines: g.totalLines || 0,
+      totalGames: total,
+      winRate: total > 0 ? Math.round((g.wins / total) * 100) : 0
+    };
+  }
 }
 
-window.BingoAuthStorage = new BingoAuthStorage();
+window.GameHubAuthStorage = window.BingoAuthStorage;
 
 // ============================================================================
 // DEVELOPER & ADMIN CONSOLE TOOLKIT
-// Open Developer Tools (F12 or Cmd+Option+I) and use `bingoAdmin`
+// Open Developer Tools (F12 or Cmd+Option+I) and use `partyPlayAdmin` or `bingoAdmin`
 // Destructive wipe methods removed for user data security.
 // ============================================================================
 window.bingoAdmin = {
-  // View all registered users in a clean console table (sensitive PINs redacted for privacy)
+  // View all registered users with multi-game breakdowns
   listUsers: function() {
     const users = window.BingoAuthStorage.getAllUsers();
     const keys = Object.keys(users);
     if (keys.length === 0) {
-      console.log('%c[BINGO ADMIN] No registered users found.', 'color:#f59e0b;');
+      console.log('%c[PARTYPLAY ADMIN] No registered users found.', 'color:#f59e0b;');
       return [];
     }
     const formatted = keys.map(k => {
       const u = users[k];
+      window.BingoAuthStorage.ensureUserGamesStructure(u);
       return {
         Username: u.username,
         Avatar: u.avatar,
-        Wins: u.stats?.wins || 0,
-        Losses: u.stats?.losses || 0,
+        Bingo: `${u.games?.bingo?.wins || 0}W / ${u.games?.bingo?.losses || 0}L`,
+        Monopoly: `${u.games?.monopoly?.wins || 0}W / ${u.games?.monopoly?.losses || 0}L`,
+        Uno: `${u.games?.uno?.wins || 0}W / ${u.games?.uno?.losses || 0}L`,
+        TotalWins: u.stats?.wins || 0,
+        TotalLosses: u.stats?.losses || 0,
         Streak: u.stats?.streak || 0,
-        MatchesPlayed: (u.history || []).length,
         Created: u.createdAt || 'N/A'
       };
     });
@@ -622,6 +826,7 @@ window.bingoAdmin = {
   // Export full JSON database for backup
   exportDatabase: function() {
     const data = {
+      platform: 'PartyPlay Hub',
       users: window.BingoAuthStorage.getAllUsers(),
       exportedAt: new Date().toISOString()
     };
@@ -632,11 +837,12 @@ window.bingoAdmin = {
   // Help command to see all available safe diagnostic functions
   help: function() {
     console.log(
-      '%cBINGO DIAGNOSTIC TOOLS:%c\n' +
-      '• bingoAdmin.listUsers()           - View registered accounts in a table\n' +
-      '• bingoAdmin.exportDatabase()      - Backup & inspect database JSON\n',
+      '%cPARTYPLAY HUB DIAGNOSTIC TOOLS:%c\n' +
+      '• partyPlayAdmin.listUsers()       - View registered accounts & game-wise stats\n' +
+      '• partyPlayAdmin.exportDatabase()   - Backup & inspect database JSON\n',
       'font-weight:bold; font-size:13px; color:#3b82f6;',
       'color:#cbd5e1;'
     );
   }
 };
+window.partyPlayAdmin = window.bingoAdmin;

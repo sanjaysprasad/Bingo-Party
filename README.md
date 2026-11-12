@@ -1,8 +1,8 @@
-# 🎲 BINGO Party - Classic 1-25 Pen & Paper Multiplayer Game
+# 🎮 PartyPlay Hub - Multi-Game Board & Tabletop Platform
 
-The nostalgic pen-and-paper game we all played in school and college with a notebook and pen! Fill your 5x5 grid with numbers 1 to 25, take turns calling numbers to strike them off, complete rows, columns, or diagonals to strike off **B - I - N - G - O**, and be the first to reach 5 lines!
+Welcome to **PartyPlay Hub**, a modern realtime multiplayer gaming hub designed for classic tabletop and party games! Play the nostalgic 1-25 **Bingo Party** live now, with custom editions of **Monopoly** and **Uno** rolling out soon.
 
-Now featuring **User Accounts & Sign In**, **Auto-Save & Game Resumption**, **Date-Stamped Match History**, and a **Global Leaderboard**!
+Featuring **Multi-Game Profiles & Stats**, **Per-Game Leaderboards**, **Auto-Save & Game Resumption**, **Date-Stamped Match History**, and **Realtime Cross-Device Multiplayer**!
 
 ---
 
@@ -13,36 +13,38 @@ Play directly in your browser:
 
 ---
 
-## ✨ Key Features
+## 🕹️ Featured Games
 
-1. 🏠 **Dedicated Home Page**:
-   - Welcome hero with 1-click play options.
+| Game | Status | Players | Mode |
+| :--- | :--- | :--- | :--- |
+| 🎲 **1. Bingoparty** | **Playable Now** | 1–8 Players | Solo vs Smart AI & Realtime Online Rooms |
+| 🌴 **2. Mallu Monopoly** | **Playable Now** | 2–8 Players | Kerala-themed 40-space board, Smart AI & Malayalam dialogues |
+| 🃏 **3. Uno Party** | **In Development** | 2–10 Players | Action card battles, Skips, Reverses, +4 Wilds |
+
+---
+
+## ✨ Hub Platform Features
+
+1. 🏠 **Games Arcade & Hub**:
+   - Central game selection arcade with live records and one-click play.
    - Profile summary widget (Avatar, Rank Title, Wins, Losses, Win Rate, Win Streak 🔥).
-   - "How It Works" interactive game rules guide.
 
-2. 👤 **User Sign In & Profiles**:
-   - Create a profile with your Username, 4-digit PIN, and custom avatar emoji (🦊, 🦁, 👑, ⚡, 🎯, 💎).
-   - All stats, win streaks, and match records persist across sessions.
+2. 👤 **Multi-Game User Profiles (`username > game > stats`)**:
+   - Accounts track wins, losses, streaks, and match logs per specific game (`games.bingo`, `games.monopoly`, `games.uno`).
+   - 100% backward compatibility preserves existing player records without data loss.
 
-3. 💾 **Resume Unfinished Games**:
-   - Active games auto-save on every turn! If you accidentally refresh or close the tab, a glowing **"Unfinished Game Found! Resume Game"** banner lets you pick up right where you left off.
+3. 🏆 **Multi-Game Leaderboards**:
+   - Filter rankings by **All Games**, **Bingo Party**, **Monopoly**, or **Uno**.
+   - Ranked badges (🥇, 🥈, 🥉) and titles (*Novice, Veteran, Sharp Shooter, Grandmaster, Legend*).
 
-4. 🏆 **Player Leaderboard**:
-   - Ranked leaderboard featuring Gold 🥇, Silver 🥈, Bronze 🥉 badges, Rank Titles (*Novice, Veteran, Sharp Shooter, Grandmaster, Legend*), total victories, win rates, and active win streaks.
+4. 💾 **Auto-Save & Resumption**:
+   - Active games auto-save on every turn! Pick up right where you left off.
 
-5. 📜 **Match History with Dates**:
-   - Every completed match is logged with exact **Date & Timestamp** (e.g. `Oct 26, 2026 • 2:45 AM`), opponent name, game mode, result (`🏆 VICTORY` / `💀 DEFEAT`), and lines completed.
-   - **Board Inspector**: Tap "🔍 Inspect Board" on any past match to view the historic 5x5 board layout!
+5. 📜 **Date-Stamped Match History**:
+   - Logged with exact date, opponent, game type, result (`🏆 VICTORY` / `💀 DEFEAT`), and interactive board inspection.
 
-6. 🤖 **Play vs Computer (Solo Mode)**:
-   - Instant 1-click single-player mode against a smart AI opponent.
-
-7. 👥 **Realtime Multiplayer Online**:
-   - Create private 4-letter room codes (or scan QR codes) to play live with friends.
-   - Turn-based sync over WebSockets + local BroadcastChannel.
-
-8. 💬 **In-Game Chat & Floating Reactions**:
-   - Live chat drawer and animated floating emoji reactions (🎉, 🔥, 🍀, 😱, 😂, 👏).
+6. 👥 **Multiplayer Networking**:
+   - Realtime cross-device turn-based sync over WebSockets/MQTT and zero-latency local `BroadcastChannel`.
 
 ---
 

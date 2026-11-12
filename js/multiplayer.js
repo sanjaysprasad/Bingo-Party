@@ -1,10 +1,12 @@
 /**
- * Multi-Transport Multiplayer Networking for Classic BINGO
+ * Multi-Transport Multiplayer Networking for PartyPlay Games Hub
  * Bridges MQTT over WebSockets (for internet cross-device play)
  * and BroadcastChannel (for instant local multi-tab testing).
+ * Supports game namespaces (Bingo, Monopoly, Uno).
  */
 class BingoMultiplayer {
   constructor() {
+    this.gameType = 'bingo'; // 'bingo' | 'monopoly' | 'uno'
     this.roomCode = null;
     this.playerId = 'p_' + Math.random().toString(36).substring(2, 9);
     this.playerName = 'Player';
@@ -38,19 +40,29 @@ class BingoMultiplayer {
     this.emit('status_change', { status, message });
   }
 
+  getMqttTopic() {
+    // Preserve existing topic for bingo, or namespace by game for monopoly/uno
+    if (this.gameType === 'bingo') {
+      return `ssp_bingo_party_v2/${this.roomCode}`;
+    }
+    return `ssp_partyplay_v1/${this.gameType}/${this.roomCode}`;
+  }
+
   // Connect & Join Room
-  async joinRoom(roomCode, playerName, isHost = false) {
+  async joinRoom(roomCode, playerName, isHost = false, gameType = 'bingo') {
+    this.gameType = (gameType || 'bingo').toLowerCase();
     this.roomCode = (roomCode || '').toUpperCase().trim();
     this.playerName = playerName || 'Player';
     this.isHost = isHost;
     this.processedMsgIds.clear();
 
-    this.setStatus('connecting', `Connecting to Room ${this.roomCode}...`);
+    this.setStatus('connecting', `Connecting to ${this.gameType.toUpperCase()} Room ${this.roomCode}...`);
 
     // 1. Setup BroadcastChannel (for same-browser tabs)
     try {
       if (this.broadcastChannel) this.broadcastChannel.close();
-      this.broadcastChannel = new BroadcastChannel(`bingo_paper_${this.roomCode}`);
+      const chName = `partyplay_${this.gameType}_${this.roomCode}`;
+      this.broadcastChannel = new BroadcastChannel(chName);
       this.broadcastChannel.onmessage = (event) => {
         const msg = event.data;
         if (!msg || typeof msg !== 'object' || typeof msg.type !== 'string') return;
@@ -78,11 +90,12 @@ class BingoMultiplayer {
       this.send('PLAYER_JOINED', {
         id: this.playerId,
         name: this.playerName,
-        isHost: this.isHost
+        isHost: this.isHost,
+        gameType: this.gameType
       });
     }, 400);
 
-    return { roomCode: this.roomCode, playerId: this.playerId };
+    return { roomCode: this.roomCode, playerId: this.playerId, gameType: this.gameType };
   }
 
   initMqtt() {
@@ -93,11 +106,11 @@ class BingoMultiplayer {
     }
 
     try {
-      const topic = `ssp_bingo_party_v2/${this.roomCode}`;
+      const topic = this.getMqttTopic();
       const brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
 
       this.mqttClient = window.mqtt.connect(brokerUrl, {
-        clientId: `bingo_${this.playerId}_${Date.now()}`,
+        clientId: `pp_${this.gameType}_${this.playerId}_${Date.now()}`,
         clean: true,
         connectTimeout: 6000,
         keepalive: 30
@@ -105,13 +118,14 @@ class BingoMultiplayer {
 
       this.mqttClient.on('connect', () => {
         this.isConnected = true;
-        this.setStatus('connected', 'Connected online to game room!');
+        this.setStatus('connected', `Connected online to ${this.gameType.toUpperCase()} room!`);
         this.mqttClient.subscribe(topic, { qos: 0 }, (err) => {
           if (!err) {
             this.send('PLAYER_JOINED', {
               id: this.playerId,
               name: this.playerName,
-              isHost: this.isHost
+              isHost: this.isHost,
+              gameType: this.gameType
             });
           }
         });
@@ -162,6 +176,7 @@ class BingoMultiplayer {
 
     const packet = {
       msgId: msgId,
+      gameType: this.gameType,
       type: type,
       payload: payload,
       senderId: this.playerId,
@@ -179,7 +194,7 @@ class BingoMultiplayer {
     // 2. Publish to MQTT topic
     if (this.mqttClient && this.mqttClient.connected) {
       try {
-        const topic = `ssp_bingo_party_v2/${this.roomCode}`;
+        const topic = this.getMqttTopic();
         this.mqttClient.publish(topic, JSON.stringify(packet), { qos: 0 });
       } catch (e) {
         console.warn('Failed to publish MQTT message:', e);
@@ -201,3 +216,4 @@ class BingoMultiplayer {
 }
 
 window.BingoMultiplayer = new BingoMultiplayer();
+window.PartyPlayMultiplayer = window.BingoMultiplayer;

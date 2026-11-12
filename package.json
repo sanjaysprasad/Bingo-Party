@@ -1,19 +1,22 @@
 {
-  "name": "bingo-party",
-  "version": "1.0.0",
-  "description": "Realtime Multiplayer Bingo Web App with WebRTC and GitHub Pages deployment",
+  "name": "partyplay-hub",
+  "version": "2.0.0",
+  "description": "PartyPlay Hub - Realtime Multiplayer Tabletop & Board Game Platform (Bingo Party, Monopoly, Uno)",
   "scripts": {
     "start": "npx serve . -l 3000",
     "serve": "python3 -m http.server 3000"
   },
   "keywords": [
+    "partyplay",
     "bingo",
+    "monopoly",
+    "uno",
     "multiplayer",
     "webrtc",
-    "peerjs",
+    "mqtt",
     "github-pages",
-    "game"
+    "games-hub"
   ],
-  "author": "",
+  "author": "Sanjay Sivaprsad",
   "license": "MIT"
 }
