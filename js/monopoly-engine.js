@@ -48,6 +48,7 @@ class MalluMonopolyEngine {
       isBot: !!cfg.isBot,
       cash: this.config.startingBalance,
       position: 0,
+      hasStarted: false,
       inJail: false,
       jailTurns: 0,
       getOutOfJailCards: 0,
@@ -187,6 +188,21 @@ class MalluMonopolyEngine {
           this.checkBotTurn();
           return true;
         }
+      }
+    }
+
+    // Initial Move Rule: Player must roll a 6 to leave START
+    if (!player.hasStarted) {
+      const rolledSix = (d1 === 6 || d2 === 6);
+      if (!rolledSix) {
+        this.addLog(`🔒 ${player.name} needs a 6 to leave START! Rolled [${d1}] + [${d2}] = ${total}. Turn passes.`);
+        this.state.phase = 'END_TURN';
+        this.notifyUpdate();
+        this.checkBotTurn();
+        return true;
+      } else {
+        player.hasStarted = true;
+        this.addLog(`🎯 ${player.name} rolled a 6! Unlocked from START and moved ${total} spaces.`);
       }
     }
 
@@ -1220,6 +1236,13 @@ class MalluMonopolyEngine {
       if (!parsed || !parsed.players) return false;
 
       this.state = parsed;
+      if (this.state.players) {
+        this.state.players.forEach(p => {
+          if (p.hasStarted === undefined) {
+            p.hasStarted = (p.position > 0);
+          }
+        });
+      }
       this.addLog(`🔄 Saved match resumed from turn ${this.state.turnNumber}!`);
       this.notifyUpdate();
       this.checkBotTurn();

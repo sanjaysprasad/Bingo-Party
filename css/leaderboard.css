@@ -702,129 +702,106 @@
   margin: 0 auto;
 }
 
-/* 3-Game Grid Layout */
+/* Compact & Clean Game Grid */
 .game-select-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 18px;
-  margin: 18px 0 24px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 12px 0 18px;
   width: 100%;
 }
 
 .game-select-card {
   background: var(--bg-card);
-  border: 2px solid var(--border-glass);
-  border-radius: 22px;
-  padding: 24px 20px;
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  padding: 16px;
   position: relative;
   display: flex;
   flex-direction: column;
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
   overflow: hidden;
 }
 
 .game-select-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
-/* 1. Bingo Party Card Theme */
 .card-bingo {
-  background: linear-gradient(160deg, rgba(22, 29, 43, 0.95), rgba(30, 58, 138, 0.22));
+  background: linear-gradient(160deg, #161d2b, #172554);
   border-color: rgba(59, 130, 246, 0.3);
 }
 
-.card-bingo:hover {
-  border-color: rgba(245, 158, 11, 0.7);
-  box-shadow: 0 18px 40px rgba(245, 158, 11, 0.25);
-}
-
-/* 2. Mallu Monopoly Card Theme */
 .card-monopoly {
-  background: linear-gradient(160deg, rgba(22, 29, 43, 0.95), rgba(6, 78, 59, 0.25));
+  background: linear-gradient(160deg, #161d2b, #064e3b);
   border-color: rgba(16, 185, 129, 0.35);
 }
 
-.card-monopoly:hover {
-  border-color: rgba(16, 185, 129, 0.8);
-  box-shadow: 0 18px 40px rgba(16, 185, 129, 0.28);
-}
-
-/* 3. Uno Party Card Theme */
 .card-uno {
-  background: linear-gradient(160deg, rgba(22, 29, 43, 0.95), rgba(185, 28, 28, 0.25));
-  border-color: rgba(239, 68, 68, 0.35);
+  background: linear-gradient(160deg, #161d2b, #450a0a);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
-.card-uno:hover {
-  border-color: rgba(239, 68, 68, 0.8);
-  box-shadow: 0 18px 40px rgba(239, 68, 68, 0.28);
-}
-
-/* Card Elements */
 .game-select-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .game-select-badge {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
-  padding: 3px 10px;
+  padding: 2px 8px;
   border-radius: 9999px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .badge-live {
-  background: rgba(34, 197, 94, 0.16);
+  background: rgba(34, 197, 94, 0.15);
   color: #4ade80;
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  border: 1px solid rgba(34, 197, 94, 0.35);
 }
 
 .badge-mallu {
-  background: rgba(16, 185, 129, 0.18);
+  background: rgba(16, 185, 129, 0.15);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.45);
+  border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
 .badge-uno {
-  background: rgba(239, 68, 68, 0.18);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.45);
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.4);
 }
 
 .game-select-players {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
   font-weight: 700;
 }
 
 .game-select-icon {
-  font-size: 3.2rem;
+  font-size: 2.2rem;
   line-height: 1;
-  margin-bottom: 10px;
-  transition: transform 0.25s ease;
-}
-
-.game-select-card:hover .game-select-icon {
-  transform: scale(1.1) rotate(4deg);
+  margin-bottom: 6px;
 }
 
 .game-select-name {
-  font-size: 1.45rem;
+  font-size: 1.25rem;
   font-weight: 900;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   color: #ffffff;
 }
 
 .game-select-tagline {
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .card-bingo .game-select-tagline { color: #fbbf24; }
@@ -832,31 +809,193 @@
 .card-uno .game-select-tagline { color: #f87171; }
 
 .game-select-description {
-  font-size: 0.88rem;
-  color: #cbd5e1;
-  line-height: 1.55;
-  margin-bottom: 16px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin-bottom: 12px;
   flex: 1;
 }
 
 .game-select-stats-bar {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 8px 12px;
+  border-radius: 8px;
+  padding: 6px 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.82rem;
-  margin-bottom: 16px;
+  font-size: 0.76rem;
+  margin-bottom: 12px;
 }
 
 .game-select-actions {
   width: 100%;
 }
 
-.game-select-actions .btn {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+.game-select-actions-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.game-select-actions-row .btn {
+  flex: 1;
+  min-width: 90px;
+  font-size: 0.82rem;
+  padding: 8px 10px;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   SQUADS & FRIENDS GROUPS (WhatsApp-Style Group Play)
+   ========================================================================== */
+.squads-container-section {
+  background: rgba(18, 25, 38, 0.85);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 12px 0 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.squads-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.squads-section-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.squads-section-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #f8fafc;
+}
+
+.squads-section-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.squads-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.squad-join-inline {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.squads-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.squad-card {
+  background: rgba(11, 15, 23, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.squad-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.squad-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.squad-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.squad-name {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #f8fafc;
+}
+
+.squad-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.btn-whatsapp {
+  background: #25d366 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 700 !important;
+  font-size: 0.74rem !important;
+  padding: 4px 8px !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border-radius: 6px !important;
+}
+
+.btn-whatsapp:hover {
+  background: #20bd5a !important;
+}
+
+.squad-members-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.squad-member-chip {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: #cbd5e1;
+}
+
+.squad-actions-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.squad-actions-row .btn {
+  flex: 1;
+  font-size: 0.75rem;
+  padding: 6px 8px;
+}
+
+.squad-empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
 }
 
 /* ==========================================================================

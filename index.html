@@ -24,10 +24,10 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
 
   <!-- Versioned Stylesheets for Instant Mobile Responsiveness -->
-  <link rel="stylesheet" href="css/style.css?v=4.0.0">
-  <link rel="stylesheet" href="css/bingo-paper.css?v=4.0.0">
-  <link rel="stylesheet" href="css/leaderboard.css?v=4.0.0">
-  <link rel="stylesheet" href="css/monopoly.css?v=4.0.0">
+  <link rel="stylesheet" href="css/style.css?v=4.1.0">
+  <link rel="stylesheet" href="css/bingo-paper.css?v=4.1.0">
+  <link rel="stylesheet" href="css/leaderboard.css?v=4.1.0">
+  <link rel="stylesheet" href="css/monopoly.css?v=4.1.0">
 
   <!-- MQTT over WebSockets CDN -->
   <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
@@ -36,9 +36,14 @@
 
   <!-- App Header (Desktop Nav + Mobile Compact Header) -->
   <header class="app-header">
-    <div class="logo-area" id="btn-header-logo">
-      <div class="logo-icon">🎮</div>
-      <div class="logo-text">PartyPlay <span class="logo-hub-tag">HUB</span></div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="btn btn-secondary btn-sm" id="btn-header-back" style="display:none;" title="Go back to Home Hub">
+        ← Back
+      </button>
+      <div class="logo-area" id="btn-header-logo">
+        <div class="logo-icon">🎮</div>
+        <div class="logo-text">PartyPlay <span class="logo-hub-tag">HUB</span></div>
+      </div>
     </div>
 
     <!-- Desktop Navigation Tabs (Hidden on mobile) -->
@@ -159,16 +164,24 @@
             <h2 class="game-select-name">1. Bingoparty</h2>
             <div class="game-select-tagline">Classic 1-25 Pen & Paper Grid</div>
             <p class="game-select-description">
-              The nostalgic pen-and-paper school game! Fill your 5×5 grid with numbers 1 to 25, take turns calling numbers, and be the first to strike off 5 lines for B-I-N-G-O!
+              The nostalgic pen-and-paper school game! Fill your 5×5 grid with numbers 1 to 25, take turns calling numbers, and strike off 5 lines for B-I-N-G-O!
             </p>
             <div class="game-select-stats-bar">
               <span>Your Bingoparty Stats:</span>
               <strong id="card-bingo-record" style="color:#fbbf24;">0W / 0L</strong>
             </div>
             <div class="game-select-actions">
-              <button class="btn btn-primary btn-block btn-lg" id="btn-select-bingo">
-                🎲 Play Bingoparty
-              </button>
+              <div class="game-select-actions-row">
+                <button class="btn btn-primary" id="btn-select-bingo">
+                  🎲 Play Bingo
+                </button>
+                <button class="btn btn-secondary" id="btn-home-bingo-solo">
+                  🤖 Solo Bot
+                </button>
+                <button class="btn btn-secondary" id="btn-home-bingo-friends">
+                  👥 With Friends
+                </button>
+              </div>
             </div>
           </div>
 
@@ -180,44 +193,73 @@
             </div>
             <div class="game-select-icon">🎩</div>
             <h2 class="game-select-name">2. Mallu Monopoly</h2>
-            <div class="game-select-tagline">Nammude Swantham Real-Estate Game</div>
+            <div class="game-select-tagline">Kerala Real-Estate Board Game</div>
             <p class="game-select-description">
-              Wheel, deal, and bankrupt rivals across Marine Drive, Munnar, Mittai Theruvu & Kowdiar Palace. Collect ₹ Lakhs in rent, manage KSRTC depots, and avoid Bebco fines!
+              Wheel, deal, and bankrupt rivals across Marine Drive, Munnar, Mittai Theruvu & Kowdiar Palace. Collect ₹ rent, roll doubles, and win!
             </p>
             <div class="game-select-stats-bar">
-              <span>Your Mallu Monopoly Stats:</span>
+              <span>Your Monopoly Stats:</span>
               <strong id="card-monopoly-record" style="color:#34d399;">0W / 0L</strong>
             </div>
             <div class="game-select-actions">
-              <button class="btn btn-success btn-block btn-lg" id="btn-select-monopoly">
-                🌴 Enter Mallu Monopoly
-              </button>
+              <div class="game-select-actions-row">
+                <button class="btn btn-success" id="btn-select-monopoly">
+                  🌴 Enter Monopoly
+                </button>
+                <button class="btn btn-secondary" id="btn-home-mono-friends">
+                  👥 Pass & Play
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- 3. UNO PARTY -->
           <div class="game-select-card card-uno" id="card-select-uno">
             <div class="game-select-top">
-              <span class="game-select-badge badge-uno">🃏 ACTION CARDS</span>
+              <span class="game-select-badge badge-uno">⏳ COMING SOON</span>
               <span class="game-select-players">👥 2–10 Players</span>
             </div>
             <div class="game-select-icon">🃏</div>
             <h2 class="game-select-name">3. Uno Party</h2>
-            <div class="game-select-tagline">Wild Card Battles & Color Chaos</div>
+            <div class="game-select-tagline">Wild Cards & Color Chaos</div>
             <p class="game-select-description">
-              Match colors and numbers, stack Wild Draw 4s, reverse the turn order, and skip your rivals. Race to empty your hand and smash the UNO button first!
+              Action cards, skips, reverses, +4 wild cards, and the famous UNO call. We will add this game soon!
             </p>
             <div class="game-select-stats-bar">
-              <span>Your Uno Stats:</span>
-              <strong id="card-uno-record" style="color:#f87171;">0W / 0L</strong>
+              <span>Status:</span>
+              <strong id="card-uno-record" style="color:#f87171;">In Development</strong>
             </div>
             <div class="game-select-actions">
-              <button class="btn btn-danger btn-block btn-lg" id="btn-select-uno">
-                🃏 Enter Uno Party
+              <button class="btn btn-secondary btn-block" id="btn-select-uno" disabled style="opacity:0.6; cursor:not-allowed;">
+                ⏳ Coming Soon
               </button>
             </div>
           </div>
 
+        </div>
+
+        <!-- FRIENDS SQUADS (WhatsApp-Style Group Play) -->
+        <div class="squads-container-section">
+          <div class="squads-section-header">
+            <div>
+              <div class="squads-section-badge">👥 FRIENDS SQUADS</div>
+              <h2 class="squads-section-title">Play With Your Friends in 1 Click</h2>
+              <p class="squads-section-subtitle">Form a squad with your gang like a WhatsApp group, share the invite, and launch games anytime!</p>
+            </div>
+            <div class="squads-header-actions">
+              <button class="btn btn-primary btn-sm" id="btn-open-create-squad-modal">
+                ➕ New Squad
+              </button>
+              <div class="squad-join-inline">
+                <input type="text" id="input-join-squad-code" placeholder="Squad Code" maxlength="8" class="input-text" style="width:110px; font-size:0.75rem; padding:5px 8px;">
+                <button class="btn btn-secondary btn-sm" id="btn-join-squad">Join</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="squads-list-grid" id="home-squads-list">
+            <!-- Rendered via JS -->
+          </div>
         </div>
 
         <!-- Overall Platform Stats Widget -->
@@ -390,13 +432,6 @@
 
               <!-- Center Board Control Hub (Rows 2 to 10, Cols 2 to 10) -->
               <div class="mono-center-hub" id="mono-center-hub">
-
-                <!-- Malayalam Dialogue Banner -->
-                <div class="mono-dialogue-banner" id="monopoly-dialogue-banner">
-                  <div class="mono-dialogue-speaker" id="monopoly-dialogue-speaker">🌴 Kerala Dialogue</div>
-                  <div class="mono-dialogue-text" id="monopoly-dialogue-text">"Damu aada parayunne!"</div>
-                  <div class="mono-dialogue-sub" id="monopoly-dialogue-sub">🎬 Dashamoolam Damu</div>
-                </div>
 
                 <!-- Active Turn Player Banner -->
                 <div class="mono-active-player-banner" id="mono-active-player-banner">
@@ -927,6 +962,37 @@
     </div>
   </div>
 
+  <!-- 5B. CREATE SQUAD MODAL -->
+  <div class="modal-overlay" id="modal-create-squad">
+    <div class="modal-card" style="max-width:380px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="font-weight:900; font-size:1.15rem;">➕ Form a Friends Squad</h3>
+        <button class="icon-btn" id="btn-close-create-squad">✕</button>
+      </div>
+      <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">
+        Form a group with your friends like in WhatsApp! You get a unique squad code & invite link to play anytime in 1 click.
+      </p>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Squad Icon</label>
+        <select class="input-select" id="select-squad-emoji" style="font-size:1.2rem;">
+          <option value="🌴">🌴 Kerala Gang</option>
+          <option value="⚡" selected>⚡ Lightning Squad</option>
+          <option value="🏠">🏠 Roommates</option>
+          <option value="🎓">🎓 College Bros</option>
+          <option value="👑">👑 Champions</option>
+          <option value="🚀">🚀 Night Owls</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:18px;">
+        <label class="form-label">Squad Name</label>
+        <input type="text" class="input-text" id="input-squad-name" placeholder="e.g. Hostel Squad, Chai Gang" maxlength="24">
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" id="btn-create-squad">
+        🎉 Create Squad & Get Code
+      </button>
+    </div>
+  </div>
+
   <!-- 6. INVITE / QR CODE MODAL -->
   <div class="modal-overlay" id="modal-invite">
     <div class="modal-content" style="text-align:center;">
@@ -1014,17 +1080,17 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Versioned Scripts for Clean Cache Busting -->
-  <script src="js/confetti.js?v=4.0.0"></script>
-  <script src="js/qrcode-lib.js?v=4.0.0"></script>
-  <script src="js/audio.js?v=4.0.0"></script>
-  <script src="js/bingo-logic.js?v=4.0.0"></script>
-  <script src="js/auth-storage.js?v=4.0.0"></script>
-  <script src="js/multiplayer.js?v=4.0.0"></script>
-  <script src="js/monopoly-config.js?v=4.0.0"></script>
-  <script src="js/monopoly-audio.js?v=4.0.0"></script>
-  <script src="js/monopoly-engine.js?v=4.0.0"></script>
-  <script src="js/monopoly-ui.js?v=4.0.0"></script>
-  <script src="js/app.js?v=4.0.0"></script>
+  <script src="js/confetti.js?v=4.1.0"></script>
+  <script src="js/qrcode-lib.js?v=4.1.0"></script>
+  <script src="js/audio.js?v=4.1.0"></script>
+  <script src="js/bingo-logic.js?v=4.1.0"></script>
+  <script src="js/auth-storage.js?v=4.1.0"></script>
+  <script src="js/multiplayer.js?v=4.1.0"></script>
+  <script src="js/monopoly-config.js?v=4.1.0"></script>
+  <script src="js/monopoly-audio.js?v=4.1.0"></script>
+  <script src="js/monopoly-engine.js?v=4.1.0"></script>
+  <script src="js/monopoly-ui.js?v=4.1.0"></script>
+  <script src="js/app.js?v=4.1.0"></script>
 
   <!-- ======================================================================
        MALLU MONOPOLY MODALS

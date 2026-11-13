@@ -77,6 +77,7 @@ class BingoApp {
     this.setupNavigation();
     this.setupAuth();
     this.setupGameEvents();
+    this.setupSquadEvents();
     this.setupMultiplayerListeners();
     this.checkInitialAuthGate();
     this.checkUrlRoomParam();
@@ -302,34 +303,95 @@ class BingoApp {
       });
     }
 
-    this.dom.btnHeaderLogo.addEventListener('click', () => {
-      this.switchView('home');
+    if (this.dom.btnHeaderLogo) {
+      this.dom.btnHeaderLogo.addEventListener('click', () => {
+        this.switchView('home');
+      });
+    }
+
+    // Persistent Header Go Back Button
+    const headerBackBtn = document.getElementById('btn-header-back');
+    if (headerBackBtn) {
+      headerBackBtn.addEventListener('click', () => {
+        this.switchView('home');
+      });
+    }
+
+    // Generic Back to Hub Buttons
+    document.querySelectorAll('.btn-back-to-hub').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.switchView('home');
+      });
     });
 
-    this.dom.btnHomeLeaderboard.addEventListener('click', () => {
-      this.switchView('leaderboard');
-    });
+    if (this.dom.btnHomeLeaderboard) {
+      this.dom.btnHomeLeaderboard.addEventListener('click', () => {
+        this.switchView('leaderboard');
+      });
+    }
 
-    this.dom.btnLeaderboardPlay.addEventListener('click', () => {
-      this.switchView('lobby');
-    });
-
-    // Main Game Selection Buttons
-    if (this.dom.btnSelectBingo) {
-      this.dom.btnSelectBingo.addEventListener('click', () => {
+    if (this.dom.btnLeaderboardPlay) {
+      this.dom.btnLeaderboardPlay.addEventListener('click', () => {
         this.switchView('lobby');
       });
     }
 
-    if (this.dom.btnSelectMonopoly) {
-      this.dom.btnSelectMonopoly.addEventListener('click', () => {
-        this.switchView('monopoly');
+    // Main Game Selection Buttons & Whole Card Clicks
+    const selectBingo = () => this.switchView('lobby');
+    const selectMonopoly = () => this.switchView('monopoly');
+    const selectUno = () => this.switchView('uno');
+
+    if (this.dom.btnSelectBingo) this.dom.btnSelectBingo.addEventListener('click', selectBingo);
+    const cardBingo = document.getElementById('card-select-bingo');
+    if (cardBingo) {
+      cardBingo.style.cursor = 'pointer';
+      cardBingo.addEventListener('click', (e) => {
+        if (!e.target.closest('button')) selectBingo();
       });
     }
 
-    if (this.dom.btnSelectUno) {
-      this.dom.btnSelectUno.addEventListener('click', () => {
-        this.switchView('uno');
+    if (this.dom.btnSelectMonopoly) this.dom.btnSelectMonopoly.addEventListener('click', selectMonopoly);
+    const cardMono = document.getElementById('card-select-monopoly');
+    if (cardMono) {
+      cardMono.style.cursor = 'pointer';
+      cardMono.addEventListener('click', (e) => {
+        if (!e.target.closest('button')) selectMonopoly();
+      });
+    }
+
+    if (this.dom.btnSelectUno) this.dom.btnSelectUno.addEventListener('click', selectUno);
+    const cardUno = document.getElementById('card-select-uno');
+    if (cardUno) {
+      cardUno.style.cursor = 'pointer';
+      cardUno.addEventListener('click', (e) => {
+        if (!e.target.closest('button')) selectUno();
+      });
+    }
+
+    // Quick Action Buttons on Home Cards
+    const btnHomeBingoSolo = document.getElementById('btn-home-bingo-solo');
+    if (btnHomeBingoSolo) {
+      btnHomeBingoSolo.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!this.ensureUserSession()) return;
+        this.startSoloBotGame();
+      });
+    }
+
+    const btnHomeBingoFriends = document.getElementById('btn-home-bingo-friends');
+    if (btnHomeBingoFriends) {
+      btnHomeBingoFriends.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!this.ensureUserSession()) return;
+        this.switchView('lobby');
+      });
+    }
+
+    const btnHomeMonoFriends = document.getElementById('btn-home-mono-friends');
+    if (btnHomeMonoFriends) {
+      btnHomeMonoFriends.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.switchView('monopoly');
       });
     }
 
@@ -428,11 +490,18 @@ class BingoApp {
       btn.classList.toggle('active', btn.dataset.nav === viewName);
     });
 
+    // Toggle Top Header Go Back Button
+    const headerBackBtn = document.getElementById('btn-header-back');
+    if (headerBackBtn) {
+      headerBackBtn.style.display = (viewName === 'home') ? 'none' : 'inline-flex';
+    }
+
     if (viewName === 'home') {
       this.dom.viewHome.classList.add('active');
       this.dom.btnHeaderInvite.style.display = 'none';
       this.refreshUserProfileUI();
       this.checkSavedActiveGame();
+      this.renderSquadsList();
     } else if (viewName === 'lobby') {
       this.dom.viewLobby.classList.add('active');
       this.dom.btnHeaderInvite.style.display = 'none';
@@ -1009,20 +1078,26 @@ class BingoApp {
   // GAME SETUP & GAMEPLAY EVENTS
   // =========================================================================
   setupGameEvents() {
-    this.dom.btnHomePlayBot.addEventListener('click', () => {
-      if (!this.ensureUserSession()) return;
-      this.startSoloBotGame();
-    });
+    if (this.dom.btnHomePlayBot) {
+      this.dom.btnHomePlayBot.addEventListener('click', () => {
+        if (!this.ensureUserSession()) return;
+        this.startSoloBotGame();
+      });
+    }
 
-    this.dom.btnHomePlayMultiplayer.addEventListener('click', () => {
-      if (!this.ensureUserSession()) return;
-      this.switchView('lobby');
-    });
+    if (this.dom.btnHomePlayMultiplayer) {
+      this.dom.btnHomePlayMultiplayer.addEventListener('click', () => {
+        if (!this.ensureUserSession()) return;
+        this.switchView('lobby');
+      });
+    }
 
-    this.dom.btnLobbyBot.addEventListener('click', () => {
-      if (!this.ensureUserSession()) return;
-      this.startSoloBotGame();
-    });
+    if (this.dom.btnLobbyBot) {
+      this.dom.btnLobbyBot.addEventListener('click', () => {
+        if (!this.ensureUserSession()) return;
+        this.startSoloBotGame();
+      });
+    }
 
     this.dom.btnLobbyCreate.addEventListener('click', () => {
       if (!this.ensureUserSession()) return;
@@ -1959,6 +2034,193 @@ class BingoApp {
     }).catch(() => {
       prompt('Copy invite link:', inviteUrl);
     });
+  }
+
+  // =========================================================================
+  // SQUADS & FRIENDS GROUPS (WhatsApp-Style Group Play)
+  // =========================================================================
+  setupSquadEvents() {
+    const btnCreateSquad = document.getElementById('btn-create-squad');
+    const btnJoinSquad = document.getElementById('btn-join-squad');
+    const inputJoinSquad = document.getElementById('input-join-squad-code');
+    const btnOpenCreateModal = document.getElementById('btn-open-create-squad-modal');
+
+    if (btnOpenCreateModal) {
+      btnOpenCreateModal.addEventListener('click', () => {
+        const modal = document.getElementById('modal-create-squad');
+        if (modal) modal.classList.add('active');
+      });
+    }
+
+    if (btnCreateSquad) {
+      btnCreateSquad.addEventListener('click', () => {
+        const nameInput = document.getElementById('input-squad-name');
+        const emojiSelect = document.getElementById('select-squad-emoji');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const emoji = emojiSelect ? emojiSelect.value : '⚡';
+        if (!name) {
+          this.showToast('Please enter a Squad Name');
+          return;
+        }
+        const squad = window.BingoAuthStorage.createSquad(name, emoji);
+        this.showToast(`🎉 Squad "${squad.name}" created! Code: ${squad.code}`);
+        const modal = document.getElementById('modal-create-squad');
+        if (modal) modal.classList.remove('active');
+        if (nameInput) nameInput.value = '';
+        this.renderSquadsList();
+      });
+    }
+
+    if (btnJoinSquad) {
+      btnJoinSquad.addEventListener('click', () => {
+        const code = inputJoinSquad ? inputJoinSquad.value.trim() : '';
+        if (!code) {
+          this.showToast('Enter a Squad Code to join');
+          return;
+        }
+        const res = window.BingoAuthStorage.joinSquad(code);
+        if (res.success) {
+          this.showToast(`🤝 Joined ${res.squad.name}!`);
+          if (inputJoinSquad) inputJoinSquad.value = '';
+          this.renderSquadsList();
+        } else {
+          this.showToast(res.message);
+        }
+      });
+    }
+
+    // Close squad modal
+    const closeBtn = document.getElementById('btn-close-create-squad');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        const modal = document.getElementById('modal-create-squad');
+        if (modal) modal.classList.remove('active');
+      });
+    }
+  }
+
+  renderSquadsList() {
+    const container = document.getElementById('home-squads-list');
+    if (!container) return;
+
+    const squads = window.BingoAuthStorage.getSquads();
+    if (squads.length === 0) {
+      container.innerHTML = `
+        <div class="squad-empty-state">
+          No squads yet. Form a squad with your friends like in WhatsApp!
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = squads.map(sq => {
+      const waText = encodeURIComponent(`Hey! Join my squad "${sq.name}" on PartyPlay Hub! Code: ${sq.code}\nPlay live tabletop games with us here: https://sanjaysprasad.github.io/Bingo-Party/?squad=${sq.code}`);
+      const waLink = `https://api.whatsapp.com/send?text=${waText}`;
+
+      return `
+        <div class="squad-card" data-squad-code="${sq.code}">
+          <div class="squad-card-header">
+            <div class="squad-title-group">
+              <span class="squad-emoji">${sq.emoji || '👥'}</span>
+              <div>
+                <div class="squad-name">${this.escapeHTML(sq.name)}</div>
+                <div class="squad-meta">Code: <strong style="color:#38bdf8;">${sq.code}</strong> • ${sq.members.length} Members</div>
+              </div>
+            </div>
+            <a href="${waLink}" target="_blank" class="btn btn-sm btn-whatsapp" title="Share Squad on WhatsApp">
+              💬 WhatsApp
+            </a>
+          </div>
+
+          <div class="squad-members-row">
+            ${sq.members.map(m => `
+              <span class="squad-member-chip" title="${this.escapeHTML(m.username)}">
+                <span>${m.avatar || '👤'}</span> ${this.escapeHTML(m.username)}
+              </span>
+            `).join('')}
+          </div>
+
+          <div class="squad-actions-row">
+            <button class="btn btn-primary btn-sm btn-squad-play-bingo" data-squad-code="${sq.code}">
+              🎲 1-Click Bingo
+            </button>
+            <button class="btn btn-success btn-sm btn-squad-play-mono" data-squad-code="${sq.code}">
+              🌴 1-Click Monopoly
+            </button>
+            <button class="btn btn-secondary btn-sm btn-squad-copy" data-squad-code="${sq.code}" title="Copy Code">
+              📋 Copy Code
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Attach click events to squad action buttons
+    container.querySelectorAll('.btn-squad-play-bingo').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.dataset.squadCode;
+        if (!this.ensureUserSession()) return;
+        this.launchSquadBingo(code);
+      });
+    });
+
+    container.querySelectorAll('.btn-squad-play-mono').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.dataset.squadCode;
+        this.launchSquadMonopoly(code);
+      });
+    });
+
+    container.querySelectorAll('.btn-squad-copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.dataset.squadCode;
+        navigator.clipboard.writeText(code).then(() => {
+          this.showToast(`📋 Squad Code "${code}" copied!`);
+        });
+      });
+    });
+  }
+
+  launchSquadBingo(squadCode) {
+    const roomCode = squadCode.replace(/[^A-Z0-9]/g, '').substring(0, 8);
+    this.state.mode = 'multiplayer';
+    this.state.roomCode = roomCode;
+    this.state.isHost = true;
+    this.state.opponentName = 'Waiting for Squad...';
+    this.state.roomPlayers.clear();
+
+    const myId = window.BingoMultiplayer.playerId;
+    const myName = window.BingoAuthStorage.currentUser ? window.BingoAuthStorage.currentUser.username : 'Host';
+    this.state.roomPlayers.set(myId, {
+      id: myId,
+      name: myName,
+      isHost: true,
+      isReady: false,
+      linesCount: 0
+    });
+
+    window.BingoMultiplayer.joinRoom(roomCode, myName, true);
+    this.startSetupPhase();
+    this.showToast(`🚀 Launched Bingo Room ${roomCode} for Squad!`);
+    this.openInviteModal();
+  }
+
+  launchSquadMonopoly(squadCode) {
+    this.switchView('monopoly');
+    const squad = window.BingoAuthStorage.getSquads().find(s => s.code === squadCode);
+    if (squad && window.malluMonopolyUI) {
+      const count = Math.min(8, Math.max(2, squad.members.length));
+      const countSelect = document.getElementById('mono-player-count-select');
+      if (countSelect) {
+        countSelect.value = String(count);
+        window.malluMonopolyUI.renderPlayerSetupForms(count);
+        const nameInputs = document.querySelectorAll('.mono-player-name-input');
+        squad.members.slice(0, count).forEach((m, idx) => {
+          if (nameInputs[idx]) nameInputs[idx].value = m.username;
+        });
+      }
+      this.showToast(`🌴 Ready with ${squad.name}! Click Launch to begin.`);
+    }
   }
 
   checkUrlRoomParam() {

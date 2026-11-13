@@ -22,6 +22,15 @@ class MalluMonopolyUI {
 
     // Initial check for saved game
     this.checkSavedGameBanner();
+
+    // Render initial setup forms for 4 players
+    this.renderPlayerSetupForms(4);
+
+    // Bind DOM event listeners once on initialization
+    this.setupEventListeners();
+
+    // Build the board once
+    this.buildBoardGridOnce();
   }
 
   // Bind DOM Event Listeners
@@ -75,41 +84,56 @@ class MalluMonopolyUI {
       });
     }
 
-    // Gameplay Action Buttons
-    const btnRollDice = document.getElementById('btn-mono-roll-dice');
-    const btnBuyProp = document.getElementById('btn-mono-buy-prop');
-    const btnDeclineProp = document.getElementById('btn-mono-decline-prop');
-    const btnEndTurn = document.getElementById('btn-mono-end-turn');
-    const btnPayJail = document.getElementById('btn-mono-pay-jail');
-    const btnUseJailCard = document.getElementById('btn-mono-use-jail-card');
-    const btnOpenTrade = document.getElementById('btn-mono-open-trade');
+    // Delegated Gameplay Action Buttons (ensures dynamic buttons always respond)
+    const actionsContainer = document.getElementById('mono-actions-container');
+    if (actionsContainer && !actionsContainer._hasBoundListeners) {
+      actionsContainer._hasBoundListeners = true;
+      actionsContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn || btn.disabled) return;
 
-    if (btnRollDice) {
-      btnRollDice.addEventListener('click', () => this.engine.rollDice());
+        if (btn.id === 'btn-mono-roll-dice') {
+          this.engine.rollDice();
+        } else if (btn.id === 'btn-mono-buy-prop') {
+          this.engine.buyCurrentProperty();
+        } else if (btn.id === 'btn-mono-decline-prop') {
+          this.engine.declineToAuction();
+        } else if (btn.id === 'btn-mono-end-turn') {
+          this.engine.endTurn();
+        } else if (btn.id === 'btn-mono-pay-jail') {
+          this.engine.payJailFine();
+        } else if (btn.id === 'btn-mono-use-jail-card') {
+          this.engine.useJailCard();
+        } else if (btn.id === 'btn-mono-open-trade') {
+          this.openTradeModal();
+        } else if (btn.id === 'btn-auction-bid-50') {
+          this.handleAuctionBid(50);
+        } else if (btn.id === 'btn-auction-bid-100') {
+          this.handleAuctionBid(100);
+        } else if (btn.id === 'btn-auction-bid-500') {
+          this.handleAuctionBid(500);
+        } else if (btn.id === 'btn-auction-pass') {
+          const auc = this.engine.state.auction;
+          if (auc) {
+            const currentBidderId = auc.activeBidders[auc.bidderTurnIndex];
+            this.engine.passAuction(currentBidderId);
+          }
+        }
+      });
     }
 
-    if (btnBuyProp) {
-      btnBuyProp.addEventListener('click', () => this.engine.buyCurrentProperty());
-    }
-
-    if (btnDeclineProp) {
-      btnDeclineProp.addEventListener('click', () => this.engine.declineToAuction());
-    }
-
-    if (btnEndTurn) {
-      btnEndTurn.addEventListener('click', () => this.engine.endTurn());
-    }
-
-    if (btnPayJail) {
-      btnPayJail.addEventListener('click', () => this.engine.payJailFine());
-    }
-
-    if (btnUseJailCard) {
-      btnUseJailCard.addEventListener('click', () => this.engine.useJailCard());
-    }
-
-    if (btnOpenTrade) {
-      btnOpenTrade.addEventListener('click', () => this.openTradeModal());
+    // Direct Click on Dice Display to Roll
+    const diceDisplay = document.getElementById('mono-dice-display');
+    if (diceDisplay && !diceDisplay._hasBoundListeners) {
+      diceDisplay._hasBoundListeners = true;
+      diceDisplay.style.cursor = 'pointer';
+      diceDisplay.setAttribute('title', 'Click to roll dice');
+      diceDisplay.addEventListener('click', () => {
+        const curr = this.engine.getCurrentPlayer();
+        if (curr && !curr.isBot && (this.engine.state.phase === 'READY_TO_ROLL' || this.engine.state.phase === 'JAIL_CHOICE')) {
+          this.engine.rollDice();
+        }
+      });
     }
 
     // Modal Close Buttons
@@ -335,15 +359,16 @@ class MalluMonopolyUI {
     const actionsContainerEl = document.getElementById('mono-actions-container');
 
     if (turnBannerEl) {
+      const lockBadge = !currPlayer.hasStarted ? '<span class="mono-badge-lock">🔒 Needs 6 to Start</span>' : '';
       turnBannerEl.innerHTML = `
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:2rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">${currPlayer.token}</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.8rem; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.2));">${currPlayer.token}</span>
           <div>
-            <div style="font-weight:900; font-size:1.15rem; color:${currPlayer.color};">
-              ${this.escapeHTML(currPlayer.name)} ${currPlayer.isBot ? '<span class="mono-bot-pill">BOT</span>' : ''}
+            <div style="font-weight:900; font-size:1.05rem; color:${currPlayer.color}; display:flex; align-items:center; gap:6px;">
+              ${this.escapeHTML(currPlayer.name)} ${currPlayer.isBot ? '<span class="mono-bot-pill">BOT</span>' : ''} ${lockBadge}
             </div>
-            <div style="font-size:0.85rem; color:#bae6fd;">
-              Turn ${state.turnNumber} • Cash: <strong style="color:#fcd34d;">₹${this.engine.formatNumber(currPlayer.cash)}</strong>
+            <div style="font-size:0.8rem; color:#475569;">
+              Turn ${state.turnNumber} • Cash: <strong style="color:#0f172a;">₹${this.engine.formatNumber(currPlayer.cash)}</strong>
               ${currPlayer.inJail ? '<span style="color:#ef4444; margin-left:6px;">⛓️ In Jail</span>' : ''}
             </div>
           </div>
@@ -430,29 +455,59 @@ class MalluMonopolyUI {
     if (state.phase === 'READY_TO_ROLL') {
       if (currPlayer.inJail) {
         html += `
-          <button class="btn btn-warning" id="btn-mono-roll-dice" ${!isHumanTurn ? 'disabled' : ''}>🎲 Roll for Doubles</button>
-          <button class="btn btn-danger" id="btn-mono-pay-jail" ${!isHumanTurn || currPlayer.cash < this.config.jailFine ? 'disabled' : ''}>🚪 Pay Fine (₹500)</button>
-          ${currPlayer.getOutOfJailCards > 0 ? `<button class="btn btn-success" id="btn-mono-use-jail-card" ${!isHumanTurn ? 'disabled' : ''}>🎫 Use Jail Card</button>` : ''}
+          <button class="btn btn-warning btn-mono-action" id="btn-mono-roll-dice" ${!isHumanTurn ? 'disabled' : ''}>🎲 Roll for Doubles</button>
+          <button class="btn btn-danger btn-mono-action" id="btn-mono-pay-jail" ${!isHumanTurn || currPlayer.cash < this.config.jailFine ? 'disabled' : ''}>🚪 Pay Fine (₹500)</button>
+          ${currPlayer.getOutOfJailCards > 0 ? `<button class="btn btn-success btn-mono-action" id="btn-mono-use-jail-card" ${!isHumanTurn ? 'disabled' : ''}>🎫 Use Jail Card</button>` : ''}
+        `;
+      } else if (!currPlayer.hasStarted) {
+        html += `
+          <button class="btn btn-warning btn-lg btn-mono-action btn-pulse-roll" id="btn-mono-roll-dice" ${!isHumanTurn ? 'disabled' : ''}>
+            🎲 Roll 6 to Start!
+          </button>
         `;
       } else {
         html += `
-          <button class="btn btn-primary btn-lg" id="btn-mono-roll-dice" ${!isHumanTurn ? 'disabled' : ''}>🎲 Roll Dice</button>
+          <button class="btn btn-primary btn-lg btn-mono-action btn-pulse-roll" id="btn-mono-roll-dice" ${!isHumanTurn ? 'disabled' : ''}>
+            🎲 Roll Dice
+          </button>
         `;
       }
     } else if (state.phase === 'ACTION_REQUIRED') {
       const space = this.config.boardSpaces[currPlayer.position];
       const canAfford = currPlayer.cash >= space.price;
       html += `
-        <button class="btn btn-success btn-lg" id="btn-mono-buy-prop" ${!isHumanTurn || !canAfford ? 'disabled' : ''}>
+        <button class="btn btn-success btn-lg btn-mono-action" id="btn-mono-buy-prop" ${!isHumanTurn || !canAfford ? 'disabled' : ''}>
           🛒 Buy ${space.name} (₹${this.engine.formatNumber(space.price)})
         </button>
-        <button class="btn btn-secondary btn-lg" id="btn-mono-decline-prop" ${!isHumanTurn ? 'disabled' : ''}>
+        <button class="btn btn-secondary btn-lg btn-mono-action" id="btn-mono-decline-prop" ${!isHumanTurn ? 'disabled' : ''}>
           🏷️ Auction
         </button>
       `;
+    } else if (state.phase === 'AUCTION') {
+      const auc = state.auction;
+      if (auc) {
+        const bidderId = auc.activeBidders[auc.bidderTurnIndex];
+        const bidder = state.players.find(p => p.id === bidderId);
+        const isMyBid = bidder && !bidder.isBot;
+        const space = this.config.boardSpaces[auc.spaceIndex];
+        const highBidder = auc.highBidderId ? state.players.find(p => p.id === auc.highBidderId) : null;
+
+        html += `
+          <div style="width:100%; text-align:center; margin-bottom:2px; font-size:0.75rem; font-weight:800; color:#0f172a;">
+            🏷️ Auction: ${space.name} • Top Bid: <strong style="color:#16a34a;">₹${auc.currentBid}</strong> ${highBidder ? `(${highBidder.name})` : ''}
+          </div>
+          <div style="font-size:0.72rem; color:#475569; width:100%; text-align:center; margin-bottom:4px;">
+            Turn: <strong style="color:#0f172a;">${bidder ? bidder.name : 'Waiting'}</strong>
+          </div>
+          <button class="btn btn-primary btn-sm btn-mono-action" id="btn-auction-bid-50" ${!isMyBid ? 'disabled' : ''}>+₹50</button>
+          <button class="btn btn-primary btn-sm btn-mono-action" id="btn-auction-bid-100" ${!isMyBid ? 'disabled' : ''}>+₹100</button>
+          <button class="btn btn-primary btn-sm btn-mono-action" id="btn-auction-bid-500" ${!isMyBid ? 'disabled' : ''}>+₹500</button>
+          <button class="btn btn-danger btn-sm btn-mono-action" id="btn-auction-pass" ${!isMyBid ? 'disabled' : ''}>Pass</button>
+        `;
+      }
     } else if (state.phase === 'END_TURN') {
       html += `
-        <button class="btn btn-primary btn-lg" id="btn-mono-end-turn" ${!isHumanTurn ? 'disabled' : ''}>
+        <button class="btn btn-primary btn-lg btn-mono-action" id="btn-mono-end-turn" ${!isHumanTurn ? 'disabled' : ''}>
           ⏭️ Pass Turn
         </button>
       `;
@@ -460,13 +515,12 @@ class MalluMonopolyUI {
 
     // Persistent trade button
     html += `
-      <button class="btn btn-secondary" id="btn-mono-open-trade" style="padding:8px 12px; font-size:0.85rem;">
+      <button class="btn btn-secondary btn-mono-action" id="btn-mono-open-trade" style="padding:8px 12px; font-size:0.85rem;">
         🤝 Trade
       </button>
     `;
 
     container.innerHTML = html;
-    this.setupEventListeners();
   }
 
   renderPlayersDashboard(state) {

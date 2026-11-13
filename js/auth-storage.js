@@ -786,8 +786,98 @@ class BingoAuthStorage {
       winRate: total > 0 ? Math.round((g.wins / total) * 100) : 0
     };
   }
+
+  // =========================================================================
+  // SQUADS & FRIENDS GROUPS (WhatsApp-Style Group Play)
+  // =========================================================================
+  getSquads() {
+    try {
+      const data = localStorage.getItem('partyplay_squads_v1');
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    // Default starter group so friends can immediately test
+    const defaultSquad = {
+      code: 'GANG42',
+      name: 'Kerala Gaming Gang',
+      emoji: '🌴',
+      creator: 'You',
+      createdAt: 'Today',
+      members: [
+        { username: this.currentUser ? this.currentUser.username : 'You', avatar: '😎' },
+        { username: 'Ramanan', avatar: '🌴' },
+        { username: 'Damu', avatar: '🎩' }
+      ]
+    };
+    return [defaultSquad];
+  }
+
+  saveSquads(squads) {
+    try {
+      localStorage.setItem('partyplay_squads_v1', JSON.stringify(squads));
+    } catch (e) {}
+  }
+
+  createSquad(name, emoji = '⚡') {
+    const trimmed = (name || '').trim() || 'My Friends Squad';
+    const code = 'SQ' + Math.floor(1000 + Math.random() * 9000);
+    const currentUser = (this.currentUser && this.currentUser.username) ? this.currentUser.username : 'You';
+    const currentAvatar = (this.currentUser && this.currentUser.avatar) ? this.currentUser.avatar : '👤';
+    const squad = {
+      code: code,
+      name: trimmed,
+      emoji: emoji || '⚡',
+      creator: currentUser,
+      createdAt: 'Today',
+      members: [
+        { username: currentUser, avatar: currentAvatar }
+      ]
+    };
+    const squads = this.getSquads();
+    squads.unshift(squad);
+    this.saveSquads(squads);
+    return squad;
+  }
+
+  joinSquad(code) {
+    const cleanCode = (code || '').trim().toUpperCase();
+    if (!cleanCode) return { success: false, message: 'Please enter a valid Squad Code.' };
+    const squads = this.getSquads();
+    let squad = squads.find(s => s.code === cleanCode);
+    const currentUser = (this.currentUser && this.currentUser.username) ? this.currentUser.username : 'Player';
+    const currentAvatar = (this.currentUser && this.currentUser.avatar) ? this.currentUser.avatar : '👤';
+
+    if (!squad) {
+      squad = {
+        code: cleanCode,
+        name: `Squad ${cleanCode}`,
+        emoji: '👥',
+        creator: 'Friend',
+        createdAt: 'Today',
+        members: []
+      };
+      squads.unshift(squad);
+    }
+
+    if (!squad.members.some(m => m.username === currentUser)) {
+      squad.members.push({ username: currentUser, avatar: currentAvatar });
+    }
+    this.saveSquads(squads);
+    return { success: true, squad: squad };
+  }
+
+  deleteSquad(code) {
+    const cleanCode = (code || '').trim().toUpperCase();
+    const squads = this.getSquads().filter(s => s.code !== cleanCode);
+    this.saveSquads(squads);
+    return squads;
+  }
 }
 
+// Global Singleton Instance
+window.BingoAuthStorage = new BingoAuthStorage();
 window.GameHubAuthStorage = window.BingoAuthStorage;
 
 // ============================================================================

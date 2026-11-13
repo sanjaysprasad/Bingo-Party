@@ -79,6 +79,32 @@ body {
   gap: 8px;
 }
 
+#btn-header-back {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+#btn-header-back:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+#btn-header-back:active {
+  transform: scale(0.95);
+}
+
 .logo-area {
   display: flex;
   align-items: center;
